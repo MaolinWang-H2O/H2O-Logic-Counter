@@ -56,7 +56,7 @@
 | ≥ 80% | Smooth / 丝滑级 | *Process is healthy, flow is clear* / 流程健康，流向顺畅 |
 | 30% – 79% | Sticky / 黏糊级 | *Logic is idling, bottlenecks exist* / 逻辑在空转，存在卡点 |
 | 10% – 29% | Muddy / 泥沼级 | *Structural issues in the process* / 流程有结构性问题 |
-| < 10% | Chaotic / 失序级 | *Process needs to be rebuilt* / 流程需要重建 |
+| < 10% | Broken / 失序级 | *Process needs to be rebuilt* / 流程需要重建 |
 
 ---
 
