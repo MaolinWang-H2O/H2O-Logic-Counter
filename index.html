@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>H₂O 逻辑浓度计算器</title>
+<style>
+:root {
+  --purple: #534AB7;
+  --purple-bg: #f9f8ff;
+  --red: #993C1D;
+  --red-bg: #FBF1ED;
+  --green: #3B6D11;
+  --green-bg: #F3F8EC;
+  --orange: #BA7517;
+  --text: #2c2c2c;
+  --sub: #5F5E5A;
+  --border: #e8e5ff;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background: #f5f5f5; display:flex; justify-content:center; align-items:center;
+  min-height:100vh; padding:16px;
+}
+.card {
+  max-width:420px; width:100%; background:#fff; border-radius:20px;
+  padding:28px 22px 24px; box-shadow:0 4px 24px rgba(0,0,0,.06);
+}
+.header { text-align:center; margin-bottom:24px; }
+.header h1 { font-size:22px; color:var(--text); font-weight:700; margin-bottom:4px; letter-spacing:.5px; }
+.header h1 sub { font-size:14px; font-weight:600; vertical-align:-2px; }
+.header .sub { font-size:12px; color:var(--sub); letter-spacing:1px; }
+.header .sub span { color:var(--purple); font-weight:600; }
+.divider { height:1px; background:var(--border); margin:0 -22px 22px; }
+.field { margin-bottom:18px; }
+.field label { display:block; font-size:14px; color:var(--text); margin-bottom:6px; font-weight:500; }
+.field .hint { font-size:12px; color:var(--sub); font-weight:400; }
+.input-row { display:flex; align-items:center; gap:8px; }
+.input-row input {
+  flex:1; height:46px; border:2px solid #e0e0e0; border-radius:12px;
+  padding:0 14px; font-size:20px; font-weight:600; color:var(--text);
+  outline:none; transition:border .2s; text-align:center;
+  -webkit-appearance:none;
+}
+.input-row input:focus { border-color:var(--purple); }
+.input-row .suffix { font-size:14px; color:var(--sub); white-space:nowrap; }
+.btn {
+  width:100%; height:50px; background:var(--purple); color:#fff;
+  border:none; border-radius:14px; font-size:17px; font-weight:700;
+  cursor:pointer; margin-top:6px; letter-spacing:2px;
+  transition:opacity .2s;
+}
+.btn:hover { opacity:.92; }
+.btn:active { opacity:.82; }
+
+.result { margin-top:22px; display:none; }
+.result.show { display:block; }
+
+.score-ring {
+  width:140px; height:140px; margin:0 auto 14px; border-radius:50%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  position:relative;
+}
+.score-ring .pct { font-size:48px; font-weight:800; line-height:1; }
+.score-ring .unit-label { font-size:12px; margin-top:2px; }
+
+.meta-bar { text-align:center; font-size:13px; color:var(--sub); margin-bottom:16px; }
+.meta-bar strong { color:var(--text); }
+
+.diagnosis {
+  border-radius:14px; padding:18px; font-size:14px; line-height:1.8;
+  text-align:left;
+}
+.diagnosis .level { font-size:15px; font-weight:700; margin-bottom:4px; }
+.diagnosis .desc { font-size:14px; margin-bottom:10px; }
+.diagnosis .tip { font-size:13px; color:var(--sub); margin-top:8px; padding-top:10px; border-top:1px solid rgba(0,0,0,.08); }
+.diagnosis .cta { margin-top:10px; font-size:14px; font-weight:700; color:#1a1a1a; padding:8px 10px; background:rgba(255,255,255,.65); border-radius:8px; }
+
+/* 丝滑级 - green + H₂O 蓝双锚 */
+.tier-smooth .score-ring { border:4px solid var(--green); background:var(--green-bg); box-shadow:inset 0 0 0 3px rgba(83,74,183,.22); }
+.tier-smooth .pct { color:var(--green); }
+.tier-smooth .unit-label { color:var(--green); }
+.tier-smooth .diagnosis { background:var(--green-bg); border:1px solid rgba(59,109,17,.15); }
+.tier-smooth .diagnosis .level { color:var(--green); }
+
+/* 黏糊级 - orange */
+.tier-sticky .score-ring { border:4px solid #F57C00; background:#FFF8E1; }
+.tier-sticky .pct { color:#F57C00; }
+.tier-sticky .unit-label { color:#F57C00; }
+.tier-sticky .diagnosis { background:#FFF8E1; border:1px solid rgba(245,124,0,.2); }
+.tier-sticky .diagnosis .level { color:#F57C00; }
+
+/* 泥沼级 - red */
+.tier-mud .score-ring { border:4px solid var(--red); background:var(--red-bg); }
+.tier-mud .pct { color:var(--red); }
+.tier-mud .unit-label { color:var(--red); }
+.tier-mud .diagnosis { background:var(--red-bg); border:1px solid rgba(153,60,29,.2); }
+.tier-mud .diagnosis .level { color:var(--red); }
+
+/* 失序级 - dark */
+.tier-broken .score-ring { border:4px solid #fff; background:#4A1B0C; }
+.tier-broken .pct { color:#fff; }
+.tier-broken .unit-label { color:rgba(255,255,255,.7); }
+.tier-broken .diagnosis { background:#4A1B0C; }
+.tier-broken .diagnosis .level { color:#fff; }
+.tier-broken .diagnosis .desc { color:rgba(255,255,255,.85); }
+.tier-broken .diagnosis .tip { color:rgba(255,255,255,.6); border-top-color:rgba(255,255,255,.15); }
+.tier-broken .diagnosis .cta { color:#fff; background:rgba(255,255,255,.08); }
+
+.footer {
+  margin-top:22px; text-align:center; font-size:12px; color:var(--sub);
+  padding-top:18px; border-top:1px solid var(--border);
+}
+.footer a, .footer .wx { color:var(--purple); font-weight:600; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <h1>H<sub>2</sub>O 逻辑浓度计算器</h1>
+    <div class="sub"><span>茂林逻辑协议</span> · 浓度 = 理论最短时间 ÷ 实际耗时 × 100%</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="field">
+    <label>① 这件事【最短需要】多少时间？<span class="hint">一切顺利，不卡壳</span></label>
+    <div class="input-row">
+      <input type="number" id="minTime" placeholder="5" min="1" step="0.1" inputmode="decimal">
+      <span class="suffix">分钟</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>② 【实际上】花了多少时间？<span class="hint">凭实际感受填</span></label>
+    <div class="input-row">
+      <input type="number" id="actualTime" placeholder="20" min="1" step="0.1" inputmode="decimal">
+      <span class="suffix">分钟</span>
+    </div>
+  </div>
+
+  <button class="btn" onclick="calculate()">测 一 下</button>
+
+  <div class="result" id="result"></div>
+
+    <div class="footer">
+    逻辑浓度，是你实际产出的时间除以你投入的所有时间。
+  </div>
+
+</div>
+
+<script>
+function calculate() {
+  const min = parseFloat(document.getElementById('minTime').value);
+  const actual = parseFloat(document.getElementById('actualTime').value);
+  const el = document.getElementById('result');
+
+  if (!min || !actual || min <= 0 || actual <= 0) {
+    el.className = 'result show';
+    el.innerHTML = '<div class="diagnosis" style="background:#fff3cd;border:1px solid #ffc107;"><div class="level" style="color:#856404;">📋 等一下</div><div class="desc">两个空都填上大于 0 的数字。</div></div>';
+    return;
+  }
+
+  const yieldPct = Math.round((min / actual) * 100); // 逻辑浓度
+  const lossX = Math.round((actual / min) * 10) / 10; // 损耗倍率
+
+  let tier, level, desc, tip, cta;
+
+  if (yieldPct >= 70) {
+    tier = 'tier-smooth';
+    level = '丝滑级 · 逻辑浓度健康';
+    desc = `你的流程跑得比较顺。投入 ${min} 分钟的事，产出 ${min} 分钟的值。`;
+    tip = `可以拿这个数跟同行的水平对一下—— 如果浓度能对标 90% 的顶尖玩家，你可能只需要优化一到两个动作。`;
+    cta = '';
+  } else if (yieldPct >= 30) {
+    tier = 'tier-sticky';
+    level = '黏糊级 · 逻辑在空转';
+    desc = `投入 ${actual} 分钟，只有 ${min} 分钟在真正产出。另外 ${actual - min} 分钟在等审批、重复沟通、来回返工。`;
+    tip = `找一下你流程中 "最想叹气的那一步" —— 那就是卡点。卡点不除，你每天多花 ${actual - min} 分钟。`;
+    cta = `浓度 ${yieldPct}%，流程在空转。需要定位卡点。`;
+  } else if (yieldPct >= 10) {
+    tier = 'tier-mud';
+    level = '泥沼级 · 流程有结构性问题';
+    desc = `实际耗时是最短时间的 ${lossX} 倍。不是一两个卡点——是好几个卡点叠在一起，互相绊。`;
+    tip = `今晚用 H₂O 协议的 "流向 → 卡点 → 和谐" 全流程扫一遍。先问自己：多出来的时间主要是找东西、沟通扯皮，还是重复返工？先拆最大的一类。`;
+    cta = `浓度 ${yieldPct}%，一天里只有 ${Math.round(yieldPct / 100 * 60)} 分钟在真正干活。需要 H₂O 审计。`;
+  } else {
+    tier = 'tier-broken';
+    level = '失序级 · 流程需要重建';
+    desc = `你花了 ${actual} 分钟，但理论只需要 ${min} 分钟。${100 - yieldPct}% 的时间被卡点吃掉了。`;
+    tip = `不是你的问题。是流程设计本身就不对。不要再修修补补了—— 按 "流向 → 卡点 → 和谐" 的顺序，从零捋一遍。`;
+    cta = `浓度 ${yieldPct}%，急需逻辑审计。`;
+  }
+
+  el.className = `result show ${tier}`;
+  el.innerHTML = `
+    <div class="score-ring">
+      <div class="pct">${yieldPct}%</div>
+      <div class="unit-label">逻辑浓度</div>
+    </div>
+    <div class="meta-bar">实际耗时是理论时间的 <strong>${lossX} 倍</strong></div>
+    <div class="diagnosis">
+      <div class="level">${level}</div>
+      <div class="desc">${desc}</div>
+      <div class="tip">${tip}</div>
+      ${cta ? `<div class="cta">⚠ ${cta}</div>` : ''}
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
