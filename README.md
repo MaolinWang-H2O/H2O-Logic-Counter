@@ -31,7 +31,7 @@
 
 打开下方计算器链接：
 
-👉 **[H₂O Logic Concentration Calculator]**(https://cf49f7a898ef47deab98e37f32e511d2.app.codebuddy.work/logic-tax-calculator.html?restart=true)
+👉 **[H₂O Logic Concentration Calculator]**(https://maolinwang-h2o.github.io/H2O-Logic-Counter/logic-tax-calculator.html)
 
 *Fill in two numbers:*
 
