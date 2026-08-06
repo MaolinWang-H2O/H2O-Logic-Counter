@@ -141,3 +141,11 @@ H₂O 协议提供了完整的审计框架：
 > ***Logic Concentration is the time you actually produce, divided by the time you invest.** *
 >
 > **逻辑浓度，是你实际产出的时间除以你投入的所有时间。**
+
+---
+
+## What's Behind This? / 这背后的逻辑是什么？
+
+→ **[H₂O Action Layer](https://github.com/maolinwang-h2o/H2O-Action-Layer)** — the six action commands that diagnose your bottleneck.
+→ **[H₂O Action Layer](https://github.com/maolinwang-h2o/H2O-Action-Layer)** — 帮你诊断卡点的六个实战招式。
+
