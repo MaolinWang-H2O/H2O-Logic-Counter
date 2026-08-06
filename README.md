@@ -144,7 +144,7 @@ H₂O 协议提供了完整的审计框架：
 
 ---
 
-## What's Behind This? / 这背后的逻辑是什么？
+## 7. What's Behind This? / 这背后的逻辑是什么？
 
 → **[H₂O Action Layer](https://github.com/maolinwang-h2o/H2O-Action-Layer)** — the six action commands that diagnose your bottleneck.
 → **[H₂O Action Layer](https://github.com/maolinwang-h2o/H2O-Action-Layer)** — 帮你诊断卡点的六个实战招式。
