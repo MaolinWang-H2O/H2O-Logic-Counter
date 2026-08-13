@@ -10,6 +10,7 @@
   --red: #993C1D; --red-bg: #FBF1ED;
   --green: #3B6D11; --green-bg: #F3F8EC;
   --orange: #BA7517;
+  --orange-btn: #ED6C30;
   --text: #2c2c2c; --sub: #5F5E5A; --border: #e8e5ff;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -38,9 +39,9 @@ body {
 .input-row input { flex:1; height:46px; border:2px solid #e0e0e0; border-radius:12px; padding:0 14px; font-size:20px; font-weight:600; color:var(--text); outline:none; transition:border .2s; text-align:center; -webkit-appearance:none; }
 .input-row input:focus { border-color:var(--purple); }
 .input-row .suffix { font-size:14px; color:var(--sub); white-space:nowrap; }
-.btn { width:100%; height:50px; background:var(--purple); color:#fff; border:none; border-radius:14px; font-size:17px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:2px; transition:opacity .2s; }
-.btn:hover { opacity:.92; }
-.btn:active { opacity:.82; }
+.btn { width:100%; height:50px; background:var(--orange-btn); color:#fff; border:none; border-radius:14px; font-size:17px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:2px; transition:transform .15s,box-shadow .15s; box-shadow:0 4px 14px rgba(237,108,48,.35); }
+.btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(237,108,48,.45); }
+.btn:active { transform:translateY(0); box-shadow:0 2px 8px rgba(237,108,48,.3); }
 
 .result { margin-top:22px; display:none; }
 .result.show { display:block; }
@@ -58,11 +59,13 @@ body {
 .diagnosis .tip { font-size:13px; color:var(--sub); margin-top:8px; padding-top:10px; border-top:1px solid rgba(0,0,0,.08); }
 .diagnosis .cta { margin-top:10px; font-size:14px; font-weight:700; color:#1a1a1a; padding:8px 10px; background:rgba(255,255,255,.65); border-radius:8px; }
 .cta-link { margin-top:6px; font-size:12px; }
+.calibrate-hint { margin-top:8px; font-size:12px; color:#999; line-height:1.6; }
+.cta-hook { margin-top:10px; font-size:14px; font-weight:700; color:#1a1a1a; }
 .cta-link a { color:var(--purple); text-decoration:none; font-weight:600; border-bottom:1px solid rgba(83,74,183,.25); padding-bottom:1px; transition:border .2s; }
 .cta-link a:hover { border-bottom-color:var(--purple); }
 
-.share-btn { display:none; width:100%; height:44px; margin-top:14px; background:#fff; color:var(--purple); border:2px solid var(--purple); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:all .2s; }
-.share-btn:hover { background:var(--purple-bg); }
+.share-btn { display:none; width:100%; height:44px; margin-top:14px; background:rgba(83,74,183,0.04); color:var(--purple); border:2px solid var(--purple); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:all .2s; }
+.share-btn:hover { background:rgba(83,74,183,0.10); border-color:#3D3499; }
 .share-btn.show { display:block; }
 
 /* tier colors */
@@ -72,11 +75,29 @@ body {
 .tier-extra .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
 .tier-extra .diagnosis .level { color:var(--purple); }
 
+.tier-anomaly .score-ring { border:4px solid var(--purple); background:var(--purple-bg); }
+.tier-anomaly .pct { color:var(--purple); }
+.tier-anomaly .unit-label { color:var(--purple); }
+.tier-anomaly .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
+.tier-anomaly .diagnosis .level { color:var(--purple); }
+
+.tier-match .score-ring { border:4px solid var(--purple); background:var(--purple-bg); }
+.tier-match .pct { color:var(--purple); }
+.tier-match .unit-label { color:var(--purple); }
+.tier-match .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
+.tier-match .diagnosis .level { color:var(--purple); }
+
 .tier-smooth .score-ring { border:4px solid var(--green); background:var(--green-bg); box-shadow:inset 0 0 0 3px rgba(83,74,183,.22); }
 .tier-smooth .pct { color:var(--green); }
 .tier-smooth .unit-label { color:var(--green); }
 .tier-smooth .diagnosis { background:var(--green-bg); border:1px solid rgba(59,109,17,.15); }
-.tier-smooth .diagnosis .level { color:var(--green); }
+.tier-smooth .diagnosis .level { color:var(--green); font-size:16px; }
+
+.tier-steady .score-ring { border:4px solid #3D6B8D; background:#F0F5FA; }
+.tier-steady .pct { color:#3D6B8D; }
+.tier-steady .unit-label { color:#3D6B8D; }
+.tier-steady .diagnosis { background:#F0F5FA; border:1px solid rgba(61,107,141,.15); }
+.tier-steady .diagnosis .level { color:#3D6B8D; }
 
 .tier-sticky .score-ring { border:4px solid #F57C00; background:#FFF8E1; }
 .tier-sticky .pct { color:#F57C00; }
@@ -99,7 +120,11 @@ body {
 .tier-broken .diagnosis .tip { color:rgba(255,255,255,.6); border-top-color:rgba(255,255,255,.15); }
 .tier-broken .diagnosis .cta { color:#fff; background:rgba(255,255,255,.08); }
 
-.footer { margin-top:22px; text-align:center; font-size:12px; color:var(--sub); padding-top:18px; border-top:1px solid var(--border); }
+.footer { margin-top:22px; text-align:center; font-size:11px; color:var(--sub); padding-top:18px; border-top:1px solid var(--border); }
+
+.agent-link { margin-top:10px; text-align:center; font-size:12px; color:var(--sub); }
+.agent-link a { color:var(--purple); font-weight:600; text-decoration:none; border-bottom:1px solid rgba(83,74,183,.25); padding-bottom:1px; }
+.agent-link a:hover { border-bottom-color:var(--purple); }
 </style>
 </head>
 <body>
@@ -107,14 +132,14 @@ body {
 
   <div class="header">
     <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
-    <h1>H<sub>2</sub>O <span data-t="title">逻辑浓度计算器</span></h1>
+    <h1>🧮 H<sub>2</sub>O <span data-t="title">逻辑浓度计算器</span></h1>
     <div class="sub"><span data-t="brand">茂林逻辑协议</span> · <span data-t="formula">浓度 = 理论最短时间 ÷ 实际耗时 × 100%</span></div>
   </div>
 
   <div class="divider"></div>
 
   <div class="field">
-    <label>① <span data-t="q1">这件事【最短需要】多少时间？</span><span class="hint" data-t="h1">一切顺利，不卡壳。如果你比这个还快，可能低估了它</span></label>
+    <label>① <span data-t="q1">这件事【最短需要】多少时间？</span><span class="hint" data-t="h1">一切顺利，不卡壳</span></label>
     <div class="input-row">
       <input type="number" id="minTime" placeholder="5" min="1" step="0.1" inputmode="decimal">
       <span class="suffix" data-t="min">分钟</span>
@@ -134,7 +159,8 @@ body {
   <div class="result" id="result"></div>
   <button class="share-btn" id="shareBtn" onclick="shareImage()" data-t="share">📸 生成分享图</button>
 
-  <div class="footer" data-t="footer">逻辑浓度，是你实际产出的时间除以你投入的所有时间。</div>
+  <div class="footer" data-t="footer">逻辑浓度 = 理论最短时间 ÷ 实际消耗时间。越高，卡点越少。</div>
+
 
 </div>
 
@@ -147,65 +173,71 @@ const T = {
   zh: {
     title: '逻辑浓度计算器',
     brand: '茂林逻辑协议',
-    formula: '浓度 = 理论最短时间 ÷ 实际耗时 × 100%',
+    formula: '逻辑浓度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
     q1: '这件事【最短需要】多少时间？',
-    h1: '一切顺利，不卡壳。如果你比这个还快，可能低估了它',
-    q2: '【实际上】花了多少时间？',
+    h1: '一切顺利，不卡壳',
+    q2: '这件事【实际上】花了多少时间？',
     h2: '凭实际感受填',
     min: '分钟',
     ctaBtn: '测 一 下',
     share: '📸 生成分享图',
-    footer: '逻辑浓度，是你实际产出的时间除以你投入的所有时间。',
+    footer: '逻辑浓度 = 理论最短时间 ÷ 实际消耗时间。越高，卡点越少。',
+    agentPrefix: '浓度不够？', agentLink: '→ 🥋 H₂O 招式 · 流向 → 卡点 → 和谐',
     errTitle: '📋 等一下',
     errBody: '两个空都填上大于 0 的数字。',
     unitLabel: '逻辑浓度',
     metaPrefix: '实际耗时是理论时间的 ',
     metaSuffix: ' 倍',
     tiers: {
-      extra: { level: '突破理论极值', desc: (m,a,p) => `你用了 ${a} 分钟，比理论最短还快了 ${Math.round((m-a)/m*100)}%。两种可能：你对流程太熟了，或者你的理论值算得有点保守。`, tip: '如果核完数据还是这个数——你这个流程可以写进案例。但建议先回去看看"最短需要"那一栏擦不扎实。', cta: (p) => `浓度 ${p}%，先核数据再确认。` },
-      anomaly: { level: '⚠ 数据似乎有误', desc: (m,a) => `你填的理论值是 ${m} 分钟，但实际只花了 ${a} 分钟。理论只有实际的三分之一不到——先回看「最短需要」那一栏，是不是记错了？`, tip: '如果两个数字都没问题，那你这个流程已经是教科书级别。但通常这种情况，是低估了理论值。', cta: (p) => `浓度 ${p}%，先核数据再谈优化。` },
+      match: { level: '精准匹配', desc: (m,a) => `正好踩在理论极值上——你用了 ${a} 分钟，一丝不多，一丝不少。流程极顺。`, tip: '如果能稳定做到，说明你对时间的估算极准。把这个流程的动作细节记下来，它会是你的基准线。', cta: (p) => `${p}%——数据精准，欢迎对标。` },
+      extra: { level: '突破理论极值', desc: (m,a,p) => `你用了 ${a} 分钟，比理论最短还快了 ${Math.round((m-a)/m*100)}%。两种可能：你对流程太熟了，或者你的理论值算得有点保守。`, tip: '如果核完数据还是这个数——你这个流程可以写进案例。但建议先回去看看"最短需要"那一栏扎实不扎实。', cta: (p) => `浓度 ${p}%，先核数据再确认。` },
+      anomaly: { level: '⚠ 数据似乎有误', desc: (m,a) => `你填的理论最短是 ${m} 分钟，但实际只花了 ${a} 分钟——实际还不到理论的几分之一。先回看「最短需要」那一栏，是不是把理论值估低了？`, tip: '如果两个数字都没问题，那你这个流程已经是教科书级别。但通常这种情况，是低估了理论值。', cta: (p) => `浓度 ${p}%，先核数据再谈优化。` },
       smooth: { level: '丝滑级 · 逻辑浓度健康', desc: (m,a) => `${a} 分钟搞定 ${m} 分钟的活，流程挺顺。`, tip: '可以拿这个数跟同行的水平对一下—— 如果浓度能对标 90% 的顶尖玩家，你可能只需要优化一到两个动作。', cta: '' },
-      sticky: { level: '黏糊级 · 逻辑在空转', desc: (m,a) => `投入 ${a} 分钟，只有 ${m} 分钟在真正产出。另外 ${a-m} 分钟消耗在流程中的某个环节上——可能是等批、可能是反复确认、可能是来回折腾。你心里应该已经有答案了。`, tip: (m,a) => `找一下你流程中 "最想叹气的第一步" —— 那就是卡点。卡点不除，你每天多花 ${a-m} 分钟。`, cta: (p) => `浓度 ${p}%，流程在空转。需要定位卡点。` },
-      mud: { level: '泥沼级 · 流程有结构性问题', desc: (x) => `实际耗时是最短时间的 ${x} 倍。不是一两个卡点——是好几个卡点叠在一起，互相绊。`, tip: '用 H₂O 协议的 "流向 → 卡点 → 和谐" 全流程扫一遍。先问自己：多出来的时间主要是找东西、沟通扯皮，还是重复返工？先拆最大的一类。', cta: (p) => `浓度 ${p}%，一天里只有 ${Math.round(p/100*60)} 分钟在真正干活。需要 H₂O 审计。` },
+      steady: { level: '稳健 · 在轨运行', desc: (m,a) => `${a} 分钟完成 ${m} 分钟的活——还行，但还能更顺。`, tip: (m,a) => `每 10 分钟里有将近 ${Math.round((a-m)/a*10)} 分钟没在真正产出。别小看——一天下来就是两小时。找找那 2~3 个小卡点，挨个捋掉。`, cta: (p) => `浓度 ${p}%，还有提升空间。` },
+      sticky: { level: '黏糊级 · 逻辑在空转', desc: (m,a) => `投入 ${a} 分钟，只有 ${m} 分钟在真正产出。另外 ${a-m} 分钟在"伺候流程"——可能是等审批、反复确认、来回折腾。其实，你心里已经有答案了。`, tip: (m,a) => `回想一下：今天做这件事时，哪一步开始前，你停了一下、犹豫了一下，或者深吸了一口气？那就是卡点。如果卡点不除，你每天多花 ${a-m} 分钟。`, cta: (p) => `浓度 ${p}%，流程在空转。需要定位卡点。` },
+      mud: { level: '泥沼级 · 流程有结构性问题', desc: (x) => `实际耗时是最短时间的 ${x} 倍。不是一两个卡点——是好几个卡点叠在一起，互相绊。`, tip: '用 H₂O 协议的 "流向 → 卡点 → 和谐" 全流程扫一遍。先问自己：多出来的时间主要是找东西、沟通扯皮，还是重复返工？先拆最大的一类。', cta: (p) => `浓度 ${p}%，一小时里只有 ${Math.round(p/100*60)} 分钟在真正干活。需要 H₂O 审计。` },
       broken: { level: '失序级 · 流程需要重建', desc: (m,a,p,x) => `你花了 ${a} 分钟，但理论只需要 ${m} 分钟。${100-p}% 的时间被卡点吃掉了。`, tip: '不是你的问题。是流程设计本身就不对。不要再修修补补了—— 按 "流向 → 卡点 → 和谐" 的顺序，从零捋一遍。', cta: (p) => `浓度 ${p}%，急需逻辑审计。` }
     },
     shareImg: {
       title: 'H₂O 逻辑浓度',
       subtitle: '茂林逻辑协议',
-      footer: 'maolinwang-h2o.github.io/H2O-Logic-Counter',
-      slogan: '实际产出 ÷ 投入的所有时间'
+      footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
+      slogan: '理论最短时间 ÷ 实际耗时'
     }
   },
   en: {
     title: 'Logic Concentration',
     brand: 'Maolin Protocol',
-    formula: 'Conc. = Theoretical Minimum ÷ Actual Time × 100%',
-    q1: '① Minimum time needed?',
-    h1: 'If everything runs smoothly. If you beat this, you might have underestimated.',
-    q2: '② Actual time spent?',
+    formula: 'Logic Concentration = Theoretical Minimum ÷ Actual Time Spent × 100%',
+    q1: 'Minimum time needed for this task?',
+    h1: 'If everything runs smoothly.',
+    q2: 'Actual time spent on this task?',
     h2: 'Your best honest guess',
     min: 'min',
     ctaBtn: 'Measure',
     share: '📸 Share Card',
-    footer: 'Logic Concentration is your actual output divided by the total time you invested.',
+    footer: 'Logic Concentration = Theoretical Minimum ÷ Actual Time. Higher means fewer bottlenecks.',
+    agentPrefix: 'Low concentration? ', agentLink: '→ H₂O Action Layer',
     errTitle: '📋 Hold on',
     errBody: 'Both fields need a number greater than 0.',
     unitLabel: 'Concentration',
     metaPrefix: 'Actual took ',
     metaSuffix: '× the theoretical minimum',
     tiers: {
-      extra: { level: 'Beyond Theoretical Limit', desc: (m,a,p) => `Took ${a} min vs. ${m} min theoretical. ${Math.round((m-a)/m*100)}% faster than the benchmark. Either you\'re extremely skilled, or your theoretical estimate was conservative.`, tip: 'If both numbers are correct — this workflow deserves a case study.', cta: (p) => `${p}% — verify data before confirming.` },
-      anomaly: { level: '⚠ Check Your Data', desc: (m,a) => `Theoretical: ${m} min. Actual: ${a} min. The gap is too extreme — re-examine the first field.`, tip: 'If both numbers are truly correct, you have a textbook-level workflow. But most likely, the theoretical number was underestimated.', cta: (p) => `${p}% — verify before optimizing.` },
-      smooth: { level: 'Silky · Healthy', desc: (m,a) => `${a} min to deliver ${m} min of value. Smooth.`, tip: 'Compare with industry benchmarks. If you can hit 90% concentration, you may only need small tweaks.', cta: '' },
-      sticky: { level: 'Sticky', desc: (m,a) => `Spent ${a} min, only ${m} min of real output. The other ${a-m} min went somewhere — maybe waiting, re-confirming, or redoing. You probably already know where.`, tip: (m,a) => `Find "the first step that made you sigh" — that\'s your bottleneck. Until you fix it, every cycle costs an extra ${a-m} min.`, cta: (p) => `${p}% — locate the bottleneck.` },
+      match: { level: 'Flawless Match', desc: (m,a) => `Took exactly ${a} min. Right on the theoretical minimum. Precise.`, tip: 'If this holds consistently, your time estimation is exceptionally calibrated. Document this workflow — it\'s your benchmark.', cta: (p) => `${p}% — calibrated. Replicate this.` },
+      extra: { level: 'Beyond Theoretical Limit', desc: (m,a,p) => `Took ${a} min vs. ${m} min theoretical. ${Math.round((m-a)/m*100)}% faster than the theoretical minimum. Either you\'re extremely skilled, or your theoretical estimate was conservative.`, tip: 'If both numbers are correct — this workflow deserves a case study.', cta: (p) => `${p}% — verify data before confirming.` },
+      anomaly: { level: '⚠ Check Your Data', desc: (m,a) => `Theoretical minimum: ${m} min. Actual: ${a} min — actual is under a third of theory. Re-examine the first field — maybe you underestimated the minimum.`, tip: 'If both numbers are truly correct, you have a textbook-level workflow. But most likely, the theoretical number was underestimated.', cta: (p) => `${p}% — verify before optimizing.` },
+      smooth: { level: 'Silky · Well-Oiled', desc: (m,a) => `${a} min to deliver ${m} min of value. Smooth.`, tip: 'Compare with industry benchmarks. If you can hit 90% concentration, you may only need small tweaks.', cta: '' },
+      steady: { level: 'Steady · On Track', desc: (m,a) => `Took ${a} min to deliver ${m} min of value. Decent — but there\'s room.`, tip: (m,a) => `Nearly ${Math.round((a-m)/a*10)} out of every 10 minutes went to something other than real output. Over a day, that adds up to 2 hours. Find those 2-3 friction points.`, cta: (p) => `${p}% — room to improve.` },
+      sticky: { level: 'Sticky', desc: (m,a) => `Spent ${a} min, only ${m} min of real output. The other ${a-m} min went somewhere — eaten by the process itself: waiting for approval, re-confirming, or redoing. Honestly, you already know where.`, tip: (m,a) => `Think back: which step made you pause, hesitate, or take a deep breath? That\'s your bottleneck. If you don\'t fix it, every cycle costs an extra ${a-m} min.`, cta: (p) => `${p}% — locate the bottleneck.` },
       mud: { level: 'Muddy · Structural Issues', desc: (x) => `Actual is ${x}× the theoretical minimum. Multiple bottlenecks are tangled together.`, tip: 'Use H₂O: Flow → Bottleneck → Harmony. Ask yourself: is the wasted time from searching, coordination, or rework?', cta: (p) => `${p}% — only ${Math.round(p/100*60)} productive min/hr. Needs audit.` },
-      broken: { level: 'Broken · Rebuild Needed', desc: (m,a,p,x) => `Spent ${a} min for a ${m}-min job. ${100-p}% consumed by bottlenecks.`, tip: 'Not your fault. The process design is broken. Stop patching. Rebuild from zero: Flow → Bottleneck → Harmony.', cta: (p) => `${p}% — urgent audit needed.` }
+      broken: { level: 'Broken · Rebuild Needed', desc: (m,a,p,x) => `Spent ${a} min on a ${m}-min job. A single bottleneck ate ${100-p}% of your time.`, tip: 'Not your fault. The process itself is broken. Stop patching holes. Start over: Flow → Bottleneck → Harmony.', cta: (p) => `${p}% — time for a full rebuild.` }
     },
     shareImg: {
       title: 'H₂O Logic Concentration',
       subtitle: 'Maolin Logic Protocol',
-      footer: 'maolinwang-h2o.github.io/H2O-Logic-Counter',
-      slogan: 'actual output ÷ total time invested'
+      footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
+      slogan: 'theoretical minimum ÷ actual time'
     }
   }
 };
@@ -253,19 +285,28 @@ function calculate() {
   let tier, level, desc, tip, cta;
   const tiers = t('tiers');
 
-  if (yieldPct >= 100) {
-    tier = 'tier-extra';
+  if (yieldPct > 100) {
     if (actual < min * 0.3) {
+      tier = 'tier-anomaly';
       const tr = tiers.anomaly;
       level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta(yieldPct);
     } else {
+      tier = 'tier-extra';
       const tr = tiers.extra;
       level = tr.level; desc = tr.desc(min, actual, yieldPct); tip = tr.tip; cta = tr.cta(yieldPct);
     }
-  } else if (yieldPct >= 70) {
+  } else if (yieldPct === 100) {
+    tier = 'tier-match';
+    const tr = tiers.match;
+    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta(yieldPct);
+  } else if (yieldPct >= 83) {
     tier = 'tier-smooth';
     const tr = tiers.smooth;
     level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta || '';
+  } else if (yieldPct >= 70) {
+    tier = 'tier-steady';
+    const tr = tiers.steady;
+    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip(min, actual); cta = tr.cta(yieldPct);
   } else if (yieldPct >= 30) {
     tier = 'tier-sticky';
     const tr = tiers.sticky;
@@ -303,8 +344,9 @@ function renderResult() {
       <div class="level">${level}</div>
       <div class="desc">${desc}</div>
       <div class="tip">${tip}</div>
-      ${cta ? `<div class="cta">⚠ ${cta}</div>` : ''}
-      ${tier !== 'tier-smooth' && cta ? `<div class="cta-link"><a href="https://github.com/maolinwang-h2o/H2O-Action-Layer" target="_blank">→ ${lang === 'zh' ? 'H₂O 招式层 · 流向 → 卡点 → 和谐' : 'H₂O Action Layer'}</a></div>` : ''}
+      ${tier === 'tier-anomaly' ? `<div class="calibrate-hint">${lang === 'zh' ? '💡 数值超出理论极值——建议回看「最短需要」那一栏，确保没有低估隐藏损耗。' : '💡 Beyond theoretical limit — double-check your minimum estimate for hidden overhead.'}</div>` : ''}
+      ${cta ? `<div class="cta">${tier === 'tier-match' ? '' : tier === 'tier-extra' ? '⚡ ' : '⚠ '}${cta}</div>` : ''}
+      ${(tier === 'tier-sticky' || tier === 'tier-mud' || tier === 'tier-broken') && cta ? `<div class="cta-hook">${lang === 'zh' ? '找到那个卡点，干掉它。这就是下一步。' : 'Find it. Fix it. Flow.'}</div><div class="cta-link"><a href="action-layer.html" target="_blank">→ ${lang === 'zh' ? '🥋 H₂O 招式 · 流向 → 卡点 → 和谐' : 'H₂O Action Layer'}</a></div>` : ''}
     </div>
   `;
   shareEl.classList.add('show');
@@ -323,14 +365,20 @@ function shareImage() {
   // Determine tier color
   const tierColors = {
     'tier-extra': '#534AB7',
+    'tier-anomaly': '#534AB7',
+    'tier-match': '#534AB7',
     'tier-smooth': '#3B6D11',
+    'tier-steady': '#3D6B8D',
     'tier-sticky': '#F57C00',
     'tier-mud': '#993C1D',
     'tier-broken': '#4A1B0C'
   };
   const tierBgColors = {
     'tier-extra': '#f9f8ff',
+    'tier-anomaly': '#f9f8ff',
+    'tier-match': '#f9f8ff',
     'tier-smooth': '#F3F8EC',
+    'tier-steady': '#F0F5FA',
     'tier-sticky': '#FFF8E1',
     'tier-mud': '#FBF1ED',
     'tier-broken': '#4A1B0C'
