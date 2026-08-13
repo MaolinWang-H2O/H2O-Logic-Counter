@@ -119,7 +119,7 @@ body {
   <div class="header">
     <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
     <h1>🌡️ H<sub>2</sub>O <span data-t="title">清醒体温计</span></h1>
-    <div class="sub"><span data-t="formula">逻辑浓度 = 理论最短时间 ÷ 实际消耗时间 × 100%</span></div>
+    <div class="sub"><span data-t="formula">清醒度 = 理论最短时间 ÷ 实际消耗时间 × 100%</span></div>
   </div>
 
   <div class="divider"></div>
@@ -158,7 +158,7 @@ body {
 const T = {
   zh: {
     title: '清醒体温计',
-    formula: '逻辑浓度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
+    formula: '清醒度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
     q1: '这件事【最短需要】多少时间？',
     h1: '一切顺利，不卡壳',
     q2: '这件事【实际上】花了多少时间？',
@@ -169,7 +169,7 @@ const T = {
     footer: '数值越高，卡点越少',
     errTitle: '📋 等一下',
     errBody: '两个空都填上大于 0 的数字。',
-    unitLabel: '逻辑浓度',
+    unitLabel: '清醒度',
     metaPrefix: '实际耗时是理论时间的 ',
     metaSuffix: ' 倍',
     tempBarLabel: ['过热', '温热', '清醒'],
@@ -180,7 +180,7 @@ const T = {
         descs: [
           (m,a,p) => `CPU 冰凉清爽，可当导师。你用 ${a} 分钟搞定 ${m} 分钟的活——流程丝滑得像刚换了固态硬盘。`,
           (m,a,p) => `${m} 分钟的活只花了你 ${a} 分钟。这效率，建议直接开班授课。`,
-          (m,a,p) => `你的时间利用率爆表了——${p}% 的逻辑浓度说明这件事对你来说已经是肌肉记忆。`,
+          (m,a,p) => `你的时间利用率爆表了——${p}% 的清醒度说明这件事对你来说已经是肌肉记忆。`,
           (m,a,p) => `别人还在热身，你已经收工了。${a} 分钟交付 ${m} 分钟的价值——这就是降维打击。`,
           (m,a,p) => `这台"脑子"今天跑分拉满。如果每天都这样，一年能多出一个季度。`
         ],
@@ -244,7 +244,7 @@ const T = {
         descs: [
           (m,a,p,x) => `老天收了约 ${100-p}% 过路费，关机吃火锅，明天重新做人。实际是最短时间的 ${x} 倍——不是一两个卡点，是好几个叠在一起互相绊。`,
           (m,a,p,x) => `${m} 分钟的事花了你 ${a} 分钟。老实说，做这件事的过程中你是不是打开了手机？`,
-          (m,a,p,x) => `你的逻辑浓度在报警了——${x} 倍的理论时间意味着这件事正在大量消耗你的心力。`,
+          (m,a,p,x) => `你的清醒度在报警了——${x} 倍的理论时间意味着这件事正在大量消耗你的心力。`,
           (m,a,p,x) => `这不是效率问题，是能量管理问题。今天的你可能不适合做这件事。`,
           (m,a,p,x) => `有时候承认"今天不在状态"本身就是一种清醒。明天再试一次，数字会完全不同。`
         ],
@@ -277,14 +277,14 @@ const T = {
     devTag: '（开发中）',
     shareImg: {
       title: 'H₂O 清醒体温计',
-      subtitle: 'H2O Clarity · 逻辑浓度',
+      subtitle: 'H2O Clarity · 清醒度',
       footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
       slogan: '理论最短时间 ÷ 实际消耗时间'
     }
   },
   en: {
     title: 'Clarity Thermometer',
-    formula: 'Logic Concentration = Theoretical Minimum ÷ Actual Time Spent × 100%',
+    formula: 'Clarity Level = Theoretical Minimum ÷ Actual Time Spent × 100%',
     q1: 'Minimum time needed for this task?',
     h1: 'If everything runs smoothly.',
     q2: 'Actual time spent on this task?',
@@ -295,7 +295,7 @@ const T = {
     footer: 'Higher value means fewer bottlenecks',
     errTitle: '📋 Hold on',
     errBody: 'Both fields need a number greater than 0.',
-    unitLabel: 'Concentration',
+    unitLabel: 'Clarity Level',
     metaPrefix: 'Actual took ',
     metaSuffix: '× the theoretical minimum',
     tempBarLabel: ['Hot', 'Warm', 'Cool'],
@@ -402,7 +402,7 @@ const T = {
     devTag: '(Coming Soon)',
     shareImg: {
       title: 'H2O Clarity Thermometer',
-      subtitle: 'H2O Clarity · Logic Concentration',
+      subtitle: 'H2O Clarity · Clarity Level',
       footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
       slogan: 'theoretical minimum ÷ actual time'
     }
@@ -518,7 +518,6 @@ function renderResult() {
       <div class="tip">${typeof tipFn === 'function' ? tipFn(min, actual) : tipFn}</div>
       ${yieldPct > 100 ? `<div class="calibrate-hint">${t('calibrateHint')}</div>` : ''}
       <div class="cta">${ctaFn(yieldPct)}</div>
-      ${(zone === 'warm' || zone === 'hot') ? `<div class="cta-dev-hint">${t('devHint')} <span class="dev-tag">${t('devTag')}</span></div>` : ''}
       <div class="golden-quote">💡 ${quote}</div>
     </div>
   `;
