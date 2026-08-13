@@ -28,16 +28,17 @@ body {
   border-radius:8px; padding:4px 10px; cursor:pointer; transition:opacity .2s;
 }
 .lang-btn:hover { opacity:.8; }
-.header h1 { font-size:22px; color:var(--text); font-weight:700; margin-bottom:4px; }
+.header h1 { font-size:22px; color:var(--text); font-weight:700; margin-bottom:8px; }
 .header h1 sub { font-size:14px; font-weight:600; vertical-align:-2px; }
-.header .sub { font-size:12px; color:var(--sub); letter-spacing:1px; }
+.header .sub { font-size:12px; color:var(--sub); letter-spacing:1px; margin-top:6px; }
 .header .sub span { color:var(--purple); font-weight:600; }
 .divider { height:1px; background:var(--border); margin:0 -22px 22px; }
 .field { margin-bottom:18px; }
-.field label { display:block; font-size:14px; color:var(--text); margin-bottom:6px; font-weight:500; }
-.field .hint { font-size:12px; color:var(--sub); font-weight:400; }
+.field label { display:block; font-size:14px; color:var(--text); margin-bottom:10px; font-weight:500; }
+.field .hint { font-size:12px; color:var(--sub); font-weight:400; margin-left:5px; }
 .input-row { display:flex; align-items:center; gap:8px; }
-.input-row input { flex:1; height:46px; border:2px solid #e0e0e0; border-radius:12px; padding:0 14px; font-size:20px; font-weight:600; color:var(--text); outline:none; transition:border .2s; text-align:center; -webkit-appearance:none; }
+.input-row input { flex:1; height:46px; border:2px solid #e0e0e0; border-radius:12px; padding:0 14px; font-size:17px; font-weight:600; color:var(--text); outline:none; transition:border .2s; text-align:center; -webkit-appearance:none; }
+.input-row input::placeholder { color:#b5b5b5; font-weight:400; font-size:15px; }
 .input-row input:focus { border-color:var(--purple); }
 .input-row .suffix { font-size:14px; color:var(--sub); white-space:nowrap; }
 .btn { width:100%; height:50px; background:var(--orange-btn); color:#fff; border:none; border-radius:14px; font-size:17px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:2px; transition:transform .15s,box-shadow .15s; box-shadow:0 4px 14px rgba(237,108,48,.35); }
@@ -95,6 +96,7 @@ body {
 .zone-cool .golden-quote { background:linear-gradient(135deg,#0f5132,#16A34A); box-shadow:0 6px 18px rgba(22,163,74,.28); }
 .zone-warm .golden-quote { background:linear-gradient(135deg,#92400e,#D97706); box-shadow:0 6px 18px rgba(217,119,6,.28); }
 .zone-hot .golden-quote { background:linear-gradient(135deg,#991b1b,#DC2626); box-shadow:0 6px 18px rgba(220,38,38,.3); }
+.formula-ref { margin-top:10px; font-size:11px; color:#aaa; text-align:center; font-style:italic; }
 .calibrate-hint { margin-top:8px; font-size:12px; color:#999; line-height:1.6; }
 
 .share-btn { display:none; width:100%; height:44px; margin-top:14px; background:rgba(83,74,183,0.04); color:var(--purple); border:2px solid var(--purple); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:all .2s; }
@@ -117,7 +119,7 @@ body {
   <div class="header">
     <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
     <h1>🌡️ H<sub>2</sub>O <span data-t="title">清醒体温计</span></h1>
-    <div class="sub"><span data-t="formula">清醒度 = 理论最短时间 ÷ 实际消耗时间 × 100%</span></div>
+    <div class="sub"><span data-t="hook">填两个数，测测你刚才那件事，到底是高效还是瞎折腾。</span></div>
   </div>
 
   <div class="divider"></div>
@@ -125,7 +127,7 @@ body {
   <div class="field">
     <label>① <span data-t="q1">这件事【最短需要】多少时间？</span><span class="hint" data-t="h1">一切顺利，不卡壳</span></label>
     <div class="input-row">
-      <input type="number" id="minTime" placeholder="5" min="1" step="0.1" inputmode="decimal">
+      <input type="number" id="minTime" placeholder="例：本来 10 分钟就能讲明白" min="1" step="0.1" inputmode="decimal">
       <span class="suffix" data-t="min">分钟</span>
     </div>
   </div>
@@ -133,7 +135,7 @@ body {
   <div class="field">
     <label>② <span data-t="q2">【实际上】花了多少时间？</span><span class="hint" data-t="h2">凭实际感受填</span></label>
     <div class="input-row">
-      <input type="number" id="actualTime" placeholder="20" min="1" step="0.1" inputmode="decimal">
+      <input type="number" id="actualTime" placeholder="例：实际开会开了 120 分钟" min="1" step="0.1" inputmode="decimal">
       <span class="suffix" data-t="min">分钟</span>
     </div>
   </div>
@@ -156,12 +158,15 @@ body {
 const T = {
   zh: {
     title: '清醒体温计',
+    hook: '填两个数，测测你刚才那件事，到底干出了多少水分。',
     formula: '清醒度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
     q1: '这件事【最短需要】多少时间？',
     h1: '一切顺利，不卡壳',
     q2: '这件事【实际上】花了多少时间？',
     h2: '凭实际感受填',
     min: '分钟',
+    ph1: '例：本来 10 分钟就能讲明白',
+    ph2: '例：实际开会开了 120 分钟',
     ctaBtn: '点这里，量体温',
     share: '📸 生成分享图',
     footer: '数值越高，卡点越少',
@@ -274,21 +279,24 @@ const T = {
     shareImg: {
       title: 'H₂O 清醒体温计',
       subtitle: 'H2O Clarity · 清醒度',
-      footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
+      footer: '512646bd008049b59cb0390be413ecfd.gz3.agentos-app.net',
       slogan: '理论最短时间 ÷ 实际消耗时间'
     }
   },
   en: {
     title: 'Clarity Thermometer',
+    hook: 'Two numbers. How much fluff was in that last task?',
     formula: 'Clarity Level = Theoretical Minimum ÷ Actual Time Spent × 100%',
     q1: 'Minimum time needed for this task?',
     h1: 'If everything runs smoothly.',
     q2: 'Actual time spent on this task?',
-    h2: 'Your best honest guess',
+    h2: 'Your honest best guess',
     min: 'min',
+    ph1: 'e.g. 10 min should\'ve been enough',
+    ph2: 'e.g. ended up taking 120 min',
     ctaBtn: 'Tap to Measure',
     share: '📸 Share Card',
-    footer: 'Higher value means fewer bottlenecks',
+    footer: 'Higher reading means fewer bottlenecks',
     errTitle: '📋 Hold on',
     errBody: 'Both fields need a number greater than 0.',
     unitLabel: 'Clarity Level',
@@ -301,7 +309,7 @@ const T = {
         descs: [
           (m,a,p) => `CPU ice cold. You delivered ${m} min of value in ${a} min — silky smooth like a fresh SSD.`,
           (m,a,p) => `${m} min of work done in ${a} min. At this efficiency, you should be teaching a masterclass.`,
-          (m,a,p) => `Your brain utilization is off the charts — ${p}% concentration means this task is basically muscle memory now.`,
+          (m,a,p) => `Your brain utilization is off the charts — ${p}% clarity means this task is basically muscle memory now.`,
           (m,a,p) => `Others are still warming up and you're already done. ${a} min for ${m} min of value — that's playing on easy mode.`,
           (m,a,p) => `Your brain is benchmarking at full throttle today. If every day were like this, you'd gain an extra quarter per year.`
         ],
@@ -310,7 +318,7 @@ const T = {
           'Don\'t get cocky — break down what made this flow so smooth. Can you replicate it elsewhere?',
           'You\'re someone else\'s benchmark right now. Question is: can this process become an SOP for others too?',
           'Enjoy this silky moment. And ask yourself: what exactly made this so smooth?',
-          'Note down your state today — mood, environment, pre-actions. This is your "legendary recipe".'
+          'Note down your state today — mood, environment, prep. This is your "legendary recipe".'
         ],
         ctas: [
           (p) => `${p}% — calibrated. Replicate this.`,
@@ -329,7 +337,7 @@ const T = {
         ]
       },
       warm: {
-        levels: ['😮‍💨 Warming Up', '🌡️ Lukewarm', '🧘 Meandering', '☕ It Passes', '🔄 Breaking In'],
+        levels: ['😮‍💨 Warming Up', '🌡️ Lukewarm', '🧘 Meandering', '☕ It\'s Fine', '🔄 Breaking In'],
         descs: [
           (m,a,p) => `Paid ~${100-p}% toll fee. Brain not fried yet. ${a} min for ${m} min of work — decent, but you know where it drags.`,
           (m,a,p) => `${a} min for ${m} min of work. Not fast, not slow — classic "could run but didn\'t push it".`,
@@ -339,7 +347,7 @@ const T = {
         ],
         tips: [
           (m,a) => `Think back: which step made you pause, hesitate, or take a deep breath? That\'s your bottleneck.`,
-          (m,a) => `Of those extra ${a-m} minutes, how much was "getting ready to start"? The pre-action hesitation often costs more than the action itself.`,
+          (m,a) => `Of those extra ${a-m} minutes, how much was "getting ready to start"? the hesitation before you start often costs more than the action itself.`,
           (m,a) => `Try timing yourself next time — not total time, but seconds from "open" to "first real move".`,
           (m,a) => `This zone\'s danger isn't slowness — it\'s "getting used to slow". You deserve faster.`,
           (m,a) => `Find someone who does the same task. Odds are 80%+ you\'re both stuck at the exact same point.`
@@ -349,7 +357,7 @@ const T = {
           (p) => `${p}% — room to grow, but no rush.`,
           (p) => `${p}% — above average, below excellent.`,
           (p) => `${p}% — one good push and you'll see a different view.`,
-          (p) => `${p}% — next time try "one sitting", no context switching.`
+          (p) => `${p}% — next time try "in one sitting", no context switching.`
         ],
         quotes: [
           'The bottleneck is the second you hesitated.',
@@ -363,9 +371,9 @@ const T = {
       hot: {
         levels: ['🔥 CPU Overheat', '🫠 Meltdown', '🚨 Cool Down Needed', '🍳 Frying Pan Mode', '📴 Restart Required'],
         descs: [
-          (m,a,p,x) => `Lost ~${100-p}% to toll fees. Time to shut down, grab hot pot, restart tomorrow. Actual is ${x}× theoretical — multiple bottlenecks tangled together.`,
+          (m,a,p,x) => `Lost ~${100-p}% to toll fees. Time to shut down, go for hot pot, restart tomorrow. Actual is ${x}× theoretical — multiple bottlenecks tangled together.`,
           (m,a,p,x) => `${m} min task took you ${a} min. Be honest — did you check your phone while doing this?`,
-          (m,a,p,x) => `Your logic concentration is screaming — ${x}× theoretical time means this task is draining serious mental energy.`,
+          (m,a,p,x) => `Your clarity level is screaming — ${x}× theoretical time means this task is draining serious mental energy.`,
           (m,a,p,x) => `This isn't an efficiency problem. It's an energy management problem. Maybe today wasn't the day for this task.`,
           (m,a,p,x) => `Sometimes admitting "I'm not in the zone today" is its own form of clarity. Try again tomorrow — the numbers will look completely different.`
         ],
@@ -397,7 +405,7 @@ const T = {
     shareImg: {
       title: 'H2O Clarity Thermometer',
       subtitle: 'H2O Clarity · Clarity Level',
-      footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
+      footer: '512646bd008049b59cb0390be413ecfd.gz3.agentos-app.net',
       slogan: 'theoretical minimum ÷ actual time'
     }
   }
@@ -424,6 +432,10 @@ function applyLang() {
   });
   document.getElementById('langBtn').textContent = lang === 'zh' ? 'EN' : '中';
   document.querySelector('title').textContent = 'H₂O ' + t('title');
+  // placeholder 国际化
+  const ph1 = t('ph1'), ph2 = t('ph2');
+  if (ph1) document.getElementById('minTime').placeholder = ph1;
+  if (ph2) document.getElementById('actualTime').placeholder = ph2;
 }
 
 // ============ 7档→3体温区 映射 ============
@@ -513,6 +525,7 @@ function renderResult() {
       ${yieldPct > 100 ? `<div class="calibrate-hint">${t('calibrateHint')}</div>` : ''}
       <div class="cta">${ctaFn(yieldPct)}</div>
       <div class="golden-quote">💡 ${quote}</div>
+      <div class="formula-ref">${t('formula')}</div>
     </div>
   `;
   lastResult.goldenQuote = quote;
