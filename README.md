@@ -31,7 +31,7 @@
 
 打开下方计算器链接：
 
-👉 **[H₂O Logic Concentration Calculator]**((https://maolinwang-h2o.github.io/H2O-Logic-Counter/)
+👉 **[H₂O Logic Concentration Calculator]**(https://maolinwang-h2o.github.io/H2O-Logic-Counter/intel.html)
 
 *Fill in two numbers:*
 
