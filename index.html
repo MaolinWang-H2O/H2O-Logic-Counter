@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>H₂O Logic Concentration</title>
+<title>H₂O Clarity Thermometer</title>
 <style>
 :root {
+  /* 3体温区 — 颜色深度拉开 */
+  --cool: #16A34A; --cool-bg: #F0FDF4; --cool-glow: rgba(22,163,74,.15);
+  --warm: #D97706; --warm-bg: #FFFBEB; --warm-glow: rgba(217,119,6,.15);
+  --hot: #DC2626; --hot-bg: #FEF2F2; --hot-glow: rgba(220,38,38,.12);
   --purple: #534AB7; --purple-bg: #f9f8ff;
-  --red: #993C1D; --red-bg: #FBF1ED;
-  --green: #3B6D11; --green-bg: #F3F8EC;
-  --orange: #BA7517;
   --orange-btn: #ED6C30;
   --text: #2c2c2c; --sub: #5F5E5A; --border: #e8e5ff;
 }
@@ -46,85 +47,70 @@ body {
 .result { margin-top:22px; display:none; }
 .result.show { display:block; }
 
-.score-ring { width:140px; height:140px; margin:0 auto 14px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; }
-.score-ring .pct { font-size:48px; font-weight:800; line-height:1; }
-.score-ring .unit-label { font-size:12px; margin-top:2px; }
+/* 圆环仪表 */
+.score-ring { width:140px; height:140px; margin:0 auto 12px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:all .4s ease; }
+.score-ring .pct { font-size:48px; font-weight:800; line-height:1; transition:color .4s; }
+.score-ring .unit-label { font-size:12px; margin-top:2px; transition:color .4s; }
 
-.meta-bar { text-align:center; font-size:13px; color:var(--sub); margin-bottom:16px; }
+/* ====== 体温预警条（新增）====== */
+.temp-bar-wrap { margin:0 auto 14px; max-width:280px; }
+.temp-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--sub); margin-bottom:4px; padding:0 2px; }
+.temp-bar-track { height:10px; border-radius:5px; background:linear-gradient(to right, var(--cool) 0%, var(--cool) 53%, var(--warm) 53%, var(--warm) 80%, var(--hot) 80%, var(--hot) 100%); position:relative; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,.12); }
+.temp-bar-marker { position:absolute; top:-3px; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid; transform:translateX(-50%); left:0%; transition:left .5s cubic-bezier(.34,1.56,.64,1); box-shadow:0 2px 6px rgba(0,0,0,.2); z-index:2; }
+.temp-bar-ticks { display:flex; justify-content:space-between; margin-top:4px; padding:0 2px; }
+.temp-bar-ticks span { font-size:10px; color:#aaa; }
+
+/* 3体温区 — 圆环 + 诊断卡颜色 */
+.zone-cool .score-ring { border:5px solid var(--cool); background:var(--cool-bg); box-shadow:0 0 20px var(--cool-glow), inset 0 0 20px var(--cool-glow); }
+.zone-cool .pct { color:var(--cool); }
+.zone-cool .unit-label { color:var(--cool); opacity:.7; }
+.zone-cool .diagnosis { background:var(--cool-bg); border:1px solid rgba(22,163,74,.2); }
+.zone-cool .diagnosis .level { color:var(--cool); }
+.zone-cool .temp-bar-marker { border-color: var(--cool); }
+
+.zone-warm .score-ring { border:5px solid var(--warm); background:var(--warm-bg); box-shadow:0 0 18px var(--warm-glow); }
+.zone-warm .pct { color:var(--warm); }
+.zone-warm .unit-label { color:var(--warm); opacity:.7; }
+.zone-warm .diagnosis { background:var(--warm-bg); border:1px solid rgba(217,119,6,.2); }
+.zone-warm .diagnosis .level { color:var(--warm); }
+.zone-warm .temp-bar-marker { border-color: var(--warm); }
+
+.zone-hot .score-ring { border:5px solid var(--hot); background:var(--hot-bg); box-shadow:0 0 18px var(--hot-glow); }
+.zone-hot .pct { color:var(--hot); }
+.zone-hot .unit-label { color:var(--hot); opacity:.7; }
+.zone-hot .diagnosis { background:var(--hot-bg); border:1px solid rgba(220,38,38,.25); }
+.zone-hot .diagnosis .level { color:var(--hot); }
+.zone-hot .diagnosis .desc { color:rgba(220,38,38,.85); }
+.zone-hot .temp-bar-marker { border-color: var(--hot); }
+
+.meta-bar { text-align:center; font-size:13px; color:var(--sub); margin-bottom:14px; }
 .meta-bar strong { color:var(--text); }
 
 .diagnosis { border-radius:14px; padding:18px; font-size:14px; line-height:1.8; text-align:left; }
-.diagnosis .level { font-size:15px; font-weight:700; margin-bottom:4px; }
-.diagnosis .desc { font-size:14px; margin-bottom:10px; }
+.diagnosis .level { font-size:17px; font-weight:800; margin-bottom:6px; letter-spacing:.5px; }
+.diagnosis .desc { font-size:14px; margin-bottom:10px; line-height:1.7; }
 .diagnosis .tip { font-size:13px; color:var(--sub); margin-top:8px; padding-top:10px; border-top:1px solid rgba(0,0,0,.08); }
-.diagnosis .cta { margin-top:10px; font-size:14px; font-weight:700; color:#1a1a1a; padding:8px 10px; background:rgba(255,255,255,.65); border-radius:8px; }
-.cta-link { margin-top:6px; font-size:12px; }
+.diagnosis .cta { margin-top:10px; font-size:14px; font-weight:700; padding:8px 10px; background:rgba(255,255,255,.65); border-radius:8px; }
+.cta-dev-hint { margin-top:12px; font-size:13px; color:#888; text-align:center; padding:8px 12px; background:rgba(0,0,0,.03); border-radius:8px; border:1px dashed rgba(0,0,0,.12); }
+.cta-dev-hint .dev-tag { color:#bbb; font-size:12px; }
+.golden-quote { margin-top:14px; padding:14px 16px; font-size:15px; font-weight:700; line-height:1.7; text-align:center; color:#fff; border-radius:12px; background:linear-gradient(135deg,#1f2937,#374151); box-shadow:0 6px 18px rgba(0,0,0,.18); letter-spacing:.5px; }
+.zone-cool .golden-quote { background:linear-gradient(135deg,#0f5132,#16A34A); box-shadow:0 6px 18px rgba(22,163,74,.28); }
+.zone-warm .golden-quote { background:linear-gradient(135deg,#92400e,#D97706); box-shadow:0 6px 18px rgba(217,119,6,.28); }
+.zone-hot .golden-quote { background:linear-gradient(135deg,#991b1b,#DC2626); box-shadow:0 6px 18px rgba(220,38,38,.3); }
 .calibrate-hint { margin-top:8px; font-size:12px; color:#999; line-height:1.6; }
-.cta-hook { margin-top:10px; font-size:14px; font-weight:700; color:#1a1a1a; }
-.cta-link a { color:var(--purple); text-decoration:none; font-weight:600; border-bottom:1px solid rgba(83,74,183,.25); padding-bottom:1px; transition:border .2s; }
-.cta-link a:hover { border-bottom-color:var(--purple); }
 
 .share-btn { display:none; width:100%; height:44px; margin-top:14px; background:rgba(83,74,183,0.04); color:var(--purple); border:2px solid var(--purple); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:all .2s; }
 .share-btn:hover { background:rgba(83,74,183,0.10); border-color:#3D3499; }
 .share-btn.show { display:block; }
 
-/* tier colors */
-.tier-extra .score-ring { border:4px solid var(--purple); background:var(--purple-bg); }
-.tier-extra .pct { color:var(--purple); }
-.tier-extra .unit-label { color:var(--purple); }
-.tier-extra .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
-.tier-extra .diagnosis .level { color:var(--purple); }
-
-.tier-anomaly .score-ring { border:4px solid var(--purple); background:var(--purple-bg); }
-.tier-anomaly .pct { color:var(--purple); }
-.tier-anomaly .unit-label { color:var(--purple); }
-.tier-anomaly .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
-.tier-anomaly .diagnosis .level { color:var(--purple); }
-
-.tier-match .score-ring { border:4px solid var(--purple); background:var(--purple-bg); }
-.tier-match .pct { color:var(--purple); }
-.tier-match .unit-label { color:var(--purple); }
-.tier-match .diagnosis { background:var(--purple-bg); border:1px solid rgba(83,74,183,.15); }
-.tier-match .diagnosis .level { color:var(--purple); }
-
-.tier-smooth .score-ring { border:4px solid var(--green); background:var(--green-bg); box-shadow:inset 0 0 0 3px rgba(83,74,183,.22); }
-.tier-smooth .pct { color:var(--green); }
-.tier-smooth .unit-label { color:var(--green); }
-.tier-smooth .diagnosis { background:var(--green-bg); border:1px solid rgba(59,109,17,.15); }
-.tier-smooth .diagnosis .level { color:var(--green); font-size:16px; }
-
-.tier-steady .score-ring { border:4px solid #3D6B8D; background:#F0F5FA; }
-.tier-steady .pct { color:#3D6B8D; }
-.tier-steady .unit-label { color:#3D6B8D; }
-.tier-steady .diagnosis { background:#F0F5FA; border:1px solid rgba(61,107,141,.15); }
-.tier-steady .diagnosis .level { color:#3D6B8D; }
-
-.tier-sticky .score-ring { border:4px solid #F57C00; background:#FFF8E1; }
-.tier-sticky .pct { color:#F57C00; }
-.tier-sticky .unit-label { color:#F57C00; }
-.tier-sticky .diagnosis { background:#FFF8E1; border:1px solid rgba(245,124,0,.2); }
-.tier-sticky .diagnosis .level { color:#F57C00; }
-
-.tier-mud .score-ring { border:4px solid var(--red); background:var(--red-bg); }
-.tier-mud .pct { color:var(--red); }
-.tier-mud .unit-label { color:var(--red); }
-.tier-mud .diagnosis { background:var(--red-bg); border:1px solid rgba(153,60,29,.2); }
-.tier-mud .diagnosis .level { color:var(--red); }
-
-.tier-broken .score-ring { border:4px solid #fff; background:#4A1B0C; }
-.tier-broken .pct { color:#fff; }
-.tier-broken .unit-label { color:rgba(255,255,255,.7); }
-.tier-broken .diagnosis { background:#4A1B0C; }
-.tier-broken .diagnosis .level { color:#fff; }
-.tier-broken .diagnosis .desc { color:rgba(255,255,255,.85); }
-.tier-broken .diagnosis .tip { color:rgba(255,255,255,.6); border-top-color:rgba(255,255,255,.15); }
-.tier-broken .diagnosis .cta { color:#fff; background:rgba(255,255,255,.08); }
-
 .footer { margin-top:22px; text-align:center; font-size:11px; color:var(--sub); padding-top:18px; border-top:1px solid var(--border); }
 
-.agent-link { margin-top:10px; text-align:center; font-size:12px; color:var(--sub); }
-.agent-link a { color:var(--purple); font-weight:600; text-decoration:none; border-bottom:1px solid rgba(83,74,183,.25); padding-bottom:1px; }
-.agent-link a:hover { border-bottom-color:var(--purple); }
+/* 呼吸动画 — 让圆环"活着" */
+@keyframes breathe { 0%,100%{transform:scale(1);} 50%{transform:scale(1.02);} }
+.zone-cool .score-ring { animation:breathe 3s ease-in-out infinite; }
+.zone-warm .score-ring { animation:breathe 2.5s ease-in-out infinite; }
+.zone-hot .score-ring { animation:breathe 2s ease-in-out infinite; }
+
 </style>
 </head>
 <body>
@@ -132,8 +118,8 @@ body {
 
   <div class="header">
     <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
-    <h1>🧮 H<sub>2</sub>O <span data-t="title">逻辑浓度计算器</span></h1>
-    <div class="sub"><span data-t="brand">茂林逻辑协议</span> · <span data-t="formula">浓度 = 理论最短时间 ÷ 实际耗时 × 100%</span></div>
+    <h1>🌡️ H<sub>2</sub>O <span data-t="title">清醒体温计</span></h1>
+    <div class="sub"><span data-t="formula">逻辑浓度 = 理论最短时间 ÷ 实际消耗时间 × 100%</span></div>
   </div>
 
   <div class="divider"></div>
@@ -159,7 +145,7 @@ body {
   <div class="result" id="result"></div>
   <button class="share-btn" id="shareBtn" onclick="shareImage()" data-t="share">📸 生成分享图</button>
 
-  <div class="footer" data-t="footer">逻辑浓度 = 理论最短时间 ÷ 实际消耗时间。越高，卡点越少。</div>
+  <div class="footer" data-t="footer">数值越高，卡点越少。</div>
 
 
 </div>
@@ -168,74 +154,255 @@ body {
 <canvas id="shareCanvas" width="1080" height="1080" style="display:none;"></canvas>
 
 <script>
-// ============ Translations ============
+// ============ Translations — 3体温区 ============
 const T = {
   zh: {
-    title: '逻辑浓度计算器',
-    brand: '茂林逻辑协议',
+    title: '清醒体温计',
     formula: '逻辑浓度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
     q1: '这件事【最短需要】多少时间？',
     h1: '一切顺利，不卡壳',
     q2: '这件事【实际上】花了多少时间？',
     h2: '凭实际感受填',
     min: '分钟',
-    ctaBtn: '测 一 下',
+    ctaBtn: '点这里，量体温',
     share: '📸 生成分享图',
-    footer: '逻辑浓度 = 理论最短时间 ÷ 实际消耗时间。越高，卡点越少。',
-    agentPrefix: '浓度不够？', agentLink: '→ 🥋 H₂O 招式 · 流向 → 卡点 → 和谐',
+    footer: '数值越高，卡点越少',
     errTitle: '📋 等一下',
     errBody: '两个空都填上大于 0 的数字。',
     unitLabel: '逻辑浓度',
     metaPrefix: '实际耗时是理论时间的 ',
     metaSuffix: ' 倍',
-    tiers: {
-      match: { level: '精准匹配', desc: (m,a) => `正好踩在理论极值上——你用了 ${a} 分钟，一丝不多，一丝不少。流程极顺。`, tip: '如果能稳定做到，说明你对时间的估算极准。把这个流程的动作细节记下来，它会是你的基准线。', cta: (p) => `${p}%——数据精准，欢迎对标。` },
-      extra: { level: '突破理论极值', desc: (m,a,p) => `你用了 ${a} 分钟，比理论最短还快了 ${Math.round((m-a)/m*100)}%。两种可能：你对流程太熟了，或者你的理论值算得有点保守。`, tip: '如果核完数据还是这个数——你这个流程可以写进案例。但建议先回去看看"最短需要"那一栏扎实不扎实。', cta: (p) => `浓度 ${p}%，先核数据再确认。` },
-      anomaly: { level: '⚠ 数据似乎有误', desc: (m,a) => `你填的理论最短是 ${m} 分钟，但实际只花了 ${a} 分钟——实际还不到理论的几分之一。先回看「最短需要」那一栏，是不是把理论值估低了？`, tip: '如果两个数字都没问题，那你这个流程已经是教科书级别。但通常这种情况，是低估了理论值。', cta: (p) => `浓度 ${p}%，先核数据再谈优化。` },
-      smooth: { level: '丝滑级 · 逻辑浓度健康', desc: (m,a) => `${a} 分钟搞定 ${m} 分钟的活，流程挺顺。`, tip: '可以拿这个数跟同行的水平对一下—— 如果浓度能对标 90% 的顶尖玩家，你可能只需要优化一到两个动作。', cta: '' },
-      steady: { level: '稳健 · 在轨运行', desc: (m,a) => `${a} 分钟完成 ${m} 分钟的活——还行，但还能更顺。`, tip: (m,a) => `每 10 分钟里有将近 ${Math.round((a-m)/a*10)} 分钟没在真正产出。别小看——一天下来就是两小时。找找那 2~3 个小卡点，挨个捋掉。`, cta: (p) => `浓度 ${p}%，还有提升空间。` },
-      sticky: { level: '黏糊级 · 逻辑在空转', desc: (m,a) => `投入 ${a} 分钟，只有 ${m} 分钟在真正产出。另外 ${a-m} 分钟在"伺候流程"——可能是等审批、反复确认、来回折腾。其实，你心里已经有答案了。`, tip: (m,a) => `回想一下：今天做这件事时，哪一步开始前，你停了一下、犹豫了一下，或者深吸了一口气？那就是卡点。如果卡点不除，你每天多花 ${a-m} 分钟。`, cta: (p) => `浓度 ${p}%，流程在空转。需要定位卡点。` },
-      mud: { level: '泥沼级 · 流程有结构性问题', desc: (x) => `实际耗时是最短时间的 ${x} 倍。不是一两个卡点——是好几个卡点叠在一起，互相绊。`, tip: '用 H₂O 协议的 "流向 → 卡点 → 和谐" 全流程扫一遍。先问自己：多出来的时间主要是找东西、沟通扯皮，还是重复返工？先拆最大的一类。', cta: (p) => `浓度 ${p}%，一小时里只有 ${Math.round(p/100*60)} 分钟在真正干活。需要 H₂O 审计。` },
-      broken: { level: '失序级 · 流程需要重建', desc: (m,a,p,x) => `你花了 ${a} 分钟，但理论只需要 ${m} 分钟。${100-p}% 的时间被卡点吃掉了。`, tip: '不是你的问题。是流程设计本身就不对。不要再修修补补了—— 按 "流向 → 卡点 → 和谐" 的顺序，从零捋一遍。', cta: (p) => `浓度 ${p}%，急需逻辑审计。` }
+    tempBarLabel: ['过热', '温热', '清醒'],
+    /* ===== 3体温区 · 戏谑+积极·不批判 · 多元文案池 ===== */
+    zones: {
+      cool: {
+        levels: ['⚡ 战神级', '🧊 冰川级', '⚡ 丝滑级', '🎯 狙击手', '✨ 满血状态'],
+        descs: [
+          (m,a,p) => `CPU 冰凉清爽，可当导师。你用 ${a} 分钟搞定 ${m} 分钟的活——流程丝滑得像刚换了固态硬盘。`,
+          (m,a,p) => `${m} 分钟的活只花了你 ${a} 分钟。这效率，建议直接开班授课。`,
+          (m,a,p) => `你的时间利用率爆表了——${p}% 的逻辑浓度说明这件事对你来说已经是肌肉记忆。`,
+          (m,a,p) => `别人还在热身，你已经收工了。${a} 分钟交付 ${m} 分钟的价值——这就是降维打击。`,
+          (m,a,p) => `这台"脑子"今天跑分拉满。如果每天都这样，一年能多出一个季度。`
+        ],
+        tips: [
+          '如果能稳定在这个区间，你已经可以带人了。把这个流程的动作细节记下来，它就是你的标杆案例。',
+          '别骄傲——把这个状态的动作拆解一下，看看能不能复制到其他事情上。',
+          '你现在就是别人的标杆。问题是：这个流程能不能写成SOP让别人也做到？',
+          '享受这一刻的丝滑感吧。同时想想：是什么让这件事这么顺？',
+          '记录下今天做这件事的状态——心情、环境、前置动作。这是你的"战神配方"。'
+        ],
+        ctas: [
+          (p) => `${p}% —— 欢迎对标，欢迎超越。`,
+          (p) => `${p}% —— 这不是运气，是实力。`,
+          (p) => `${p}% —— 建议截图留念。`,
+          (p) => `${p}% —— 别谦虚，这就是牛。`,
+          (p) => `${p}% —— 可以发朋友圈了（划掉）。`
+        ],
+        quotes: [
+          '清醒，是最高级的效率。',
+          '体温计只报度数，不夸你今天真棒。',
+          '把这个状态拆成动作，它就是你的标准答案。',
+          '你只是量到了高分，别把它当勋章。',
+          '丝滑不是天赋，是动作对齐了流向。',
+          '今天的水很清，记下来，明天照着做。'
+        ]
+      },
+      warm: {
+        levels: ['😮‍💨 摸鱼平分', '🌡️ 微热中', '🧘 温吞模式', '☕ 还行还行', '🔄 在磨合'],
+        descs: [
+          (m,a,p) => `交了约 ${100-p}% 过路费，脑子没烧坏。${a} 分钟完成 ${m} 分钟的活——还行，但你知道哪里在磨蹭。`,
+          (m,a,p) => `${a} 分钟做完 ${m} 分钟的事。不算快也不算慢——典型的"能跑但没全力跑"。`,
+          (m,a,p) => `你的脑子在温水中泡着呢。不烫但也没那么爽——大概就是"周一上午"的感觉。`,
+          (m,a,p) => `理论上 ${m} 分钟的事你花了 ${a} 分钟。多出来的时间里，有一部分是在跟自己较劲。`,
+          (m,a,p) => `中等偏暖。就像一杯放凉了的咖啡——还能喝，但你记得它刚端上来时多香。`
+        ],
+        tips: [
+          (m,a) => `回想一下：今天做这件事时，哪一步开始前你停了一下、犹豫了一下、或者深吸了一口气？那就是卡点。`,
+          (m,a) => `多花的那 ${a-m} 分钟里，有多少是在"准备开始"？行动前的纠结往往比行动本身更耗时。`,
+          (m,a) => `试试下次做这件事的时候计时——不是看总时长，而是看从"打开"到"开始动"隔了几秒。`,
+          (m,a) => `这个区间最危险的不是慢，而是"习惯了慢"。你值得更快。`,
+          (m,a) => `找一个同样做过这件事的人聊聊——你会发现你们卡在同一个地方的概率超过80%。`
+        ],
+        ctas: [
+          (p) => `${p}% —— 找到那 2~3 个小卡点，挨个捋掉就行。`,
+          (p) => `${p}% —— 还有空间，但不急。`,
+          (p) => `${p}% —— 及格线以上，优秀线以下。`,
+          (p) => `${p}% —— 加把劲就能看到不一样的风景。`,
+          (p) => `${p}% —— 下次试试"一口气做完"，别中间切出去。`
+        ],
+        quotes: [
+          '卡点，就是你犹豫的那一秒。',
+          '温水煮的不是青蛙，是你今天的进度。',
+          '不急着快，先让水流动起来。',
+          '慢不是罪，卡住才是。',
+          '找到停住的那一步，它就是钥匙。',
+          '体温计说你温热，它没说你不行。'
+        ]
+      },
+      hot: {
+        levels: ['🔥 CPU 过热', '🫠 融化了', '🚨 需要降温', '🍳 在煎锅上', '📴 该重启了'],
+        descs: [
+          (m,a,p,x) => `老天收了约 ${100-p}% 过路费，关机吃火锅，明天重新做人。实际是最短时间的 ${x} 倍——不是一两个卡点，是好几个叠在一起互相绊。`,
+          (m,a,p,x) => `${m} 分钟的事花了你 ${a} 分钟。老实说，做这件事的过程中你是不是打开了手机？`,
+          (m,a,p,x) => `你的逻辑浓度在报警了——${x} 倍的理论时间意味着这件事正在大量消耗你的心力。`,
+          (m,a,p,x) => `这不是效率问题，是能量管理问题。今天的你可能不适合做这件事。`,
+          (m,a,p,x) => `有时候承认"今天不在状态"本身就是一种清醒。明天再试一次，数字会完全不同。`
+        ],
+        tips: [
+          '不是你的问题。是流程本身该重建了。不要再修修补补——明天精神好的时候，从零捋一遍。',
+          '先别想优化了。先问自己：今天做这件事之前，是不是已经累了/饿了/烦了？',
+          '如果这件事反复出现在"过热区"，那它可能根本不该由你来做——或者该换个方式做。',
+          '关掉所有通知，把手机扔到另一个房间，再来一次。光这一步就能帮你省掉20%。',
+          '接受现实：今天这件事就是做得不好。那又怎样？明天又是新的一天。'
+        ],
+        ctas: [
+          (p) => `${p}% —— 先吃顿好的，明天重新做人。`,
+          (p) => `${p}% —— 允许自己偶尔崩一下。`,
+          (p) => `${p}% —— 记住这种感觉，它是改变的起点。`,
+          (p) => `${p}% —— 不需要现在就解决一切。`,
+          (p) => `${p}% —— 放下手机，去喝杯水。`
+        ],
+        quotes: [
+          '不是你不行，是流程该重装了。',
+          '今天这脑子，建议带薪拉胯。',
+          '放下，是重启的第一步。',
+          '体温计说你发烧了，它没说你差劲。',
+          '断流的时候，先别硬冲。',
+          '关机不是认输，是给明天留余地。'
+        ]
+      }
     },
+    calibrateHint: '💡 数值超出理论极值——建议回看「最短需要」那一栏，确保没有低估隐藏损耗。',
+    devHint: '🥋 H₂O 招式 · 流向 → 卡点 → 和谐',
+    devTag: '（开发中）',
     shareImg: {
-      title: 'H₂O 逻辑浓度',
-      subtitle: '茂林逻辑协议',
+      title: 'H₂O 清醒体温计',
+      subtitle: 'H2O Clarity · 逻辑浓度',
       footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
-      slogan: '理论最短时间 ÷ 实际耗时'
+      slogan: '理论最短时间 ÷ 实际消耗时间'
     }
   },
   en: {
-    title: 'Logic Concentration',
-    brand: 'Maolin Protocol',
+    title: 'Clarity Thermometer',
     formula: 'Logic Concentration = Theoretical Minimum ÷ Actual Time Spent × 100%',
     q1: 'Minimum time needed for this task?',
     h1: 'If everything runs smoothly.',
     q2: 'Actual time spent on this task?',
     h2: 'Your best honest guess',
     min: 'min',
-    ctaBtn: 'Measure',
+    ctaBtn: 'Tap to Measure',
     share: '📸 Share Card',
-    footer: 'Logic Concentration = Theoretical Minimum ÷ Actual Time. Higher means fewer bottlenecks.',
-    agentPrefix: 'Low concentration? ', agentLink: '→ H₂O Action Layer',
+    footer: 'Higher value means fewer bottlenecks',
     errTitle: '📋 Hold on',
     errBody: 'Both fields need a number greater than 0.',
     unitLabel: 'Concentration',
     metaPrefix: 'Actual took ',
     metaSuffix: '× the theoretical minimum',
-    tiers: {
-      match: { level: 'Flawless Match', desc: (m,a) => `Took exactly ${a} min. Right on the theoretical minimum. Precise.`, tip: 'If this holds consistently, your time estimation is exceptionally calibrated. Document this workflow — it\'s your benchmark.', cta: (p) => `${p}% — calibrated. Replicate this.` },
-      extra: { level: 'Beyond Theoretical Limit', desc: (m,a,p) => `Took ${a} min vs. ${m} min theoretical. ${Math.round((m-a)/m*100)}% faster than the theoretical minimum. Either you\'re extremely skilled, or your theoretical estimate was conservative.`, tip: 'If both numbers are correct — this workflow deserves a case study.', cta: (p) => `${p}% — verify data before confirming.` },
-      anomaly: { level: '⚠ Check Your Data', desc: (m,a) => `Theoretical minimum: ${m} min. Actual: ${a} min — actual is under a third of theory. Re-examine the first field — maybe you underestimated the minimum.`, tip: 'If both numbers are truly correct, you have a textbook-level workflow. But most likely, the theoretical number was underestimated.', cta: (p) => `${p}% — verify before optimizing.` },
-      smooth: { level: 'Silky · Well-Oiled', desc: (m,a) => `${a} min to deliver ${m} min of value. Smooth.`, tip: 'Compare with industry benchmarks. If you can hit 90% concentration, you may only need small tweaks.', cta: '' },
-      steady: { level: 'Steady · On Track', desc: (m,a) => `Took ${a} min to deliver ${m} min of value. Decent — but there\'s room.`, tip: (m,a) => `Nearly ${Math.round((a-m)/a*10)} out of every 10 minutes went to something other than real output. Over a day, that adds up to 2 hours. Find those 2-3 friction points.`, cta: (p) => `${p}% — room to improve.` },
-      sticky: { level: 'Sticky', desc: (m,a) => `Spent ${a} min, only ${m} min of real output. The other ${a-m} min went somewhere — eaten by the process itself: waiting for approval, re-confirming, or redoing. Honestly, you already know where.`, tip: (m,a) => `Think back: which step made you pause, hesitate, or take a deep breath? That\'s your bottleneck. If you don\'t fix it, every cycle costs an extra ${a-m} min.`, cta: (p) => `${p}% — locate the bottleneck.` },
-      mud: { level: 'Muddy · Structural Issues', desc: (x) => `Actual is ${x}× the theoretical minimum. Multiple bottlenecks are tangled together.`, tip: 'Use H₂O: Flow → Bottleneck → Harmony. Ask yourself: is the wasted time from searching, coordination, or rework?', cta: (p) => `${p}% — only ${Math.round(p/100*60)} productive min/hr. Needs audit.` },
-      broken: { level: 'Broken · Rebuild Needed', desc: (m,a,p,x) => `Spent ${a} min on a ${m}-min job. A single bottleneck ate ${100-p}% of your time.`, tip: 'Not your fault. The process itself is broken. Stop patching holes. Start over: Flow → Bottleneck → Harmony.', cta: (p) => `${p}% — time for a full rebuild.` }
+    tempBarLabel: ['Hot', 'Warm', 'Cool'],
+    zones: {
+      cool: {
+        levels: ['⚡ Legendary', '🧊 Glacier', '⚡ Silky', '🎯 Sniper', '✨ Full Health'],
+        descs: [
+          (m,a,p) => `CPU ice cold. You delivered ${m} min of value in ${a} min — silky smooth like a fresh SSD.`,
+          (m,a,p) => `${m} min of work done in ${a} min. At this efficiency, you should be teaching a masterclass.`,
+          (m,a,p) => `Your brain utilization is off the charts — ${p}% concentration means this task is basically muscle memory now.`,
+          (m,a,p) => `Others are still warming up and you're already done. ${a} min for ${m} min of value — that's playing on easy mode.`,
+          (m,a,p) => `Your brain is benchmarking at full throttle today. If every day were like this, you'd gain an extra quarter per year.`
+        ],
+        tips: [
+          'If you can consistently hit this zone, you\'re ready to mentor. Document this workflow — it\'s your benchmark.',
+          'Don\'t get cocky — break down what made this flow so smooth. Can you replicate it elsewhere?',
+          'You\'re someone else\'s benchmark right now. Question is: can this process become an SOP for others too?',
+          'Enjoy this silky moment. And ask yourself: what exactly made this so smooth?',
+          'Note down your state today — mood, environment, pre-actions. This is your "legendary recipe".'
+        ],
+        ctas: [
+          (p) => `${p}% — calibrated. Replicate this.`,
+          (p) => `${p}% — not luck, just skill.`,
+          (p) => `${p}% — screenshot worthy.`,
+          (p) => `${p}% — no false modesty. This is elite.`,
+          (p) => `${p}% — go ahead, share it (just kidding... or are we?).`
+        ],
+        quotes: [
+          'Clarity is the highest form of efficiency.',
+          'The thermometer reads the number — it doesn\'t praise you.',
+          'Break this state into actions — that\'s your standard answer.',
+          'You scored high today. Don\'t wear it like a medal.',
+          'Silky isn\'t talent — it\'s motion aligned with flow.',
+          'The water\'s clear today — write it down, repeat tomorrow.'
+        ]
+      },
+      warm: {
+        levels: ['😮‍💨 Warming Up', '🌡️ Lukewarm', '🧘 Meandering', '☕ It Passes', '🔄 Breaking In'],
+        descs: [
+          (m,a,p) => `Paid ~${100-p}% toll fee. Brain not fried yet. ${a} min for ${m} min of work — decent, but you know where it drags.`,
+          (m,a,p) => `${a} min for ${m} min of work. Not fast, not slow — classic "could run but didn\'t push it".`,
+          (m,a,p) => `Your brain is simmering in lukewarm water. Not painful, but not thrilling either — basically "Monday morning" vibes.`,
+          (m,a,p) => `Theoretically ${m} min, actually ${a} min. Some of that extra time was spent wrestling with yourself.`,
+          (m,a,p) => `Medium-warm. Like coffee that\'s gone lukewarm — still drinkable, but you remember how good it was fresh.`
+        ],
+        tips: [
+          (m,a) => `Think back: which step made you pause, hesitate, or take a deep breath? That\'s your bottleneck.`,
+          (m,a) => `Of those extra ${a-m} minutes, how much was "getting ready to start"? The pre-action hesitation often costs more than the action itself.`,
+          (m,a) => `Try timing yourself next time — not total time, but seconds from "open" to "first real move".`,
+          (m,a) => `This zone\'s danger isn't slowness — it\'s "getting used to slow". You deserve faster.`,
+          (m,a) => `Find someone who does the same task. Odds are 80%+ you\'re both stuck at the exact same point.`
+        ],
+        ctas: [
+          (p) => `${p}% — find those 2-3 friction points and clear them.`,
+          (p) => `${p}% — room to grow, but no rush.`,
+          (p) => `${p}% — above average, below excellent.`,
+          (p) => `${p}% — one good push and you'll see a different view.`,
+          (p) => `${p}% — next time try "one sitting", no context switching.`
+        ],
+        quotes: [
+          'The bottleneck is the second you hesitated.',
+          'Lukewarm water isn\'t boiling the frog — it\'s boiling your progress.',
+          'Don\'t rush to be fast. First, let the water flow.',
+          'Slow isn\'t a sin. Stuck is.',
+          'Find the step where you stopped — that\'s the key.',
+          'The thermometer says you\'re warm — it doesn\'t say you\'re failing.'
+        ]
+      },
+      hot: {
+        levels: ['🔥 CPU Overheat', '🫠 Meltdown', '🚨 Cool Down Needed', '🍳 Frying Pan Mode', '📴 Restart Required'],
+        descs: [
+          (m,a,p,x) => `Lost ~${100-p}% to toll fees. Time to shut down, grab hot pot, restart tomorrow. Actual is ${x}× theoretical — multiple bottlenecks tangled together.`,
+          (m,a,p,x) => `${m} min task took you ${a} min. Be honest — did you check your phone while doing this?`,
+          (m,a,p,x) => `Your logic concentration is screaming — ${x}× theoretical time means this task is draining serious mental energy.`,
+          (m,a,p,x) => `This isn't an efficiency problem. It's an energy management problem. Maybe today wasn't the day for this task.`,
+          (m,a,p,x) => `Sometimes admitting "I'm not in the zone today" is its own form of clarity. Try again tomorrow — the numbers will look completely different.`
+        ],
+        tips: [
+          'Not your fault. The process needs rebuilding. Stop patching holes. Start fresh tomorrow when you\'re sharp.',
+          'Don\'t think about optimizing yet. Ask: were you already tired/hungry/frustrated before starting this?',
+          'If this task keeps landing in "overheat zone", maybe it shouldn\'t be done by you — or should be done differently.',
+          'Turn off all notifications, throw your phone in another room, try again. That single move can save you 20%.',
+          'Accept reality: today\'s performance on this thing sucked. So what? Tomorrow is a new day.'
+        ],
+        ctas: [
+          (p) => `${p}% — eat well, sleep well, restart tomorrow.`,
+          (p) => `${p}% — permission to occasionally crash.`,
+          (p) => `${p}% — remember this feeling. It's where change starts.`,
+          (p) => `${p}% — you don't have to fix everything right now.`,
+          (p) => `${p}% — put down the phone. Go drink some water.`
+        ],
+        quotes: [
+          'It\'s not you. The process needs a reinstall.',
+          'Today your brain is on paid leave. That\'s fine.',
+          'Letting go is the first step to restart.',
+          'The thermometer says you\'re feverish — it doesn\'t say you\'re worthless.',
+          'When flow breaks, don\'t force the rush.',
+          'Shutting down isn\'t losing. It\'s saving tomorrow.'
+        ]
+      }
     },
+    calibrateHint: '💡 Beyond theoretical limit — double-check your minimum estimate for hidden overhead.',
+    devHint: '🥋 H₂O Moves · Flow → Bottleneck → Harmony',
+    devTag: '(Coming Soon)',
     shareImg: {
-      title: 'H₂O Logic Concentration',
-      subtitle: 'Maolin Logic Protocol',
+      title: 'H2O Clarity Thermometer',
+      subtitle: 'H2O Clarity · Logic Concentration',
       footer: '24d0128378f64a6e865af0ae8f1cf15c.sh2.agentos-app.net/logic-tax-calculator.html',
       slogan: 'theoretical minimum ÷ actual time'
     }
@@ -244,7 +411,7 @@ const T = {
 
 // ============ Language State ============
 let lang = localStorage.getItem('h2o-lang') || 'zh';
-let lastResult = null; // store result data for share
+let lastResult = null;
 
 function t(key) { return T[lang][key]; }
 
@@ -265,6 +432,18 @@ function applyLang() {
   document.querySelector('title').textContent = 'H₂O ' + t('title');
 }
 
+// ============ 7档→3体温区 映射 ============
+function getZone(pct) {
+  if (pct >= 80) return 'cool';     // match/extra/anomaly/smooth → 清醒
+  if (pct >= 50) return 'warm';     // steady/sticky → 温热
+  return 'hot';                      // mud/broken → 过热
+}
+
+function clampPct(pct) {
+  // 体温条映射: 0-100% → 条上位置 0%-100%
+  return Math.max(0, Math.min(100, pct));
+}
+
 // ============ Calculation ============
 function calculate() {
   const min = parseFloat(document.getElementById('minTime').value);
@@ -282,73 +461,68 @@ function calculate() {
 
   const yieldPct = Math.round((min / actual) * 100);
   const lossX = Math.round((actual / min) * 10) / 10;
-  let tier, level, desc, tip, cta;
-  const tiers = t('tiers');
+  const zone = getZone(yieldPct);
+  const zData = t('zones')[zone];
 
-  if (yieldPct > 100) {
-    if (actual < min * 0.3) {
-      tier = 'tier-anomaly';
-      const tr = tiers.anomaly;
-      level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta(yieldPct);
-    } else {
-      tier = 'tier-extra';
-      const tr = tiers.extra;
-      level = tr.level; desc = tr.desc(min, actual, yieldPct); tip = tr.tip; cta = tr.cta(yieldPct);
-    }
-  } else if (yieldPct === 100) {
-    tier = 'tier-match';
-    const tr = tiers.match;
-    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta(yieldPct);
-  } else if (yieldPct >= 83) {
-    tier = 'tier-smooth';
-    const tr = tiers.smooth;
-    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip; cta = tr.cta || '';
-  } else if (yieldPct >= 70) {
-    tier = 'tier-steady';
-    const tr = tiers.steady;
-    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip(min, actual); cta = tr.cta(yieldPct);
-  } else if (yieldPct >= 30) {
-    tier = 'tier-sticky';
-    const tr = tiers.sticky;
-    level = tr.level; desc = tr.desc(min, actual); tip = tr.tip(min, actual); cta = tr.cta(yieldPct);
-  } else if (yieldPct >= 10) {
-    tier = 'tier-mud';
-    const tr = tiers.mud;
-    level = tr.level; desc = tr.desc(lossX); tip = tr.tip; cta = tr.cta(yieldPct);
-  } else {
-    tier = 'tier-broken';
-    const tr = tiers.broken;
-    level = tr.level; desc = tr.desc(min, actual, yieldPct, lossX); tip = tr.tip; cta = tr.cta(yieldPct);
-  }
-
-  lastResult = { yieldPct, lossX, tier, level, desc, tip, cta, min, actual };
+  lastResult = { yieldPct, lossX, zone, zData, min, actual };
 
   renderResult();
 }
 
 function renderResult() {
   if (!lastResult) return;
-  const { yieldPct, lossX, tier, level, desc, tip, cta, min, actual } = lastResult;
+  const { yieldPct, lossX, zone, zData, min, actual } = lastResult;
   const el = document.getElementById('result');
   const shareEl = document.getElementById('shareBtn');
-  const lossStyle = lossX >= 3 ? ' style="color:#993C1D;font-weight:800;"' : '';
+  const lossStyle = lossX >= 3 ? ' style="color:#DC2626;font-weight:800;"' : '';
 
-  el.className = `result show ${tier}`;
+  // 从多元文案池随机抽取
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  const level = pick(zData.levels);
+  const descFn = pick(zData.descs);
+  const tipFn = pick(zData.tips);
+  const ctaFn = pick(zData.ctas);
+  const quote = pick(zData.quotes);
+
+  // 体温条位置: pct → %
+  const barPos = clampPct(yieldPct);
+
+  el.className = `result show zone-${zone}`;
   el.innerHTML = `
     <div class="score-ring">
       <div class="pct">${yieldPct}%</div>
       <div class="unit-label">${t('unitLabel')}</div>
     </div>
+
+    <!-- 体温预警条 -->
+    <div class="temp-bar-wrap">
+      <div class="temp-bar-label">
+        <span>${t('tempBarLabel')[0]}</span>
+        <span>${t('tempBarLabel')[1]}</span>
+        <span>${t('tempBarLabel')[2]}</span>
+      </div>
+      <div class="temp-bar-track">
+        <div class="temp-bar-marker" style="left:${barPos}%;"></div>
+      </div>
+      <div class="temp-bar-ticks">
+        <span>&lt;50%</span>
+        <span>50-80%</span>
+        <span>80%+</span>
+      </div>
+    </div>
+
     <div class="meta-bar">${t('metaPrefix')}<strong${lossStyle}>${lossX}${t('metaSuffix')}</strong></div>
     <div class="diagnosis">
       <div class="level">${level}</div>
-      <div class="desc">${desc}</div>
-      <div class="tip">${tip}</div>
-      ${tier === 'tier-anomaly' ? `<div class="calibrate-hint">${lang === 'zh' ? '💡 数值超出理论极值——建议回看「最短需要」那一栏，确保没有低估隐藏损耗。' : '💡 Beyond theoretical limit — double-check your minimum estimate for hidden overhead.'}</div>` : ''}
-      ${cta ? `<div class="cta">${tier === 'tier-match' ? '' : tier === 'tier-extra' ? '⚡ ' : '⚠ '}${cta}</div>` : ''}
-      ${(tier === 'tier-sticky' || tier === 'tier-mud' || tier === 'tier-broken') && cta ? `<div class="cta-hook">${lang === 'zh' ? '找到那个卡点，干掉它。这就是下一步。' : 'Find it. Fix it. Flow.'}</div><div class="cta-link"><a href="action-layer.html" target="_blank">→ ${lang === 'zh' ? '🥋 H₂O 招式 · 流向 → 卡点 → 和谐' : 'H₂O Action Layer'}</a></div>` : ''}
+      <div class="desc">${descFn(min, actual, yieldPct, lossX)}</div>
+      <div class="tip">${typeof tipFn === 'function' ? tipFn(min, actual) : tipFn}</div>
+      ${yieldPct > 100 ? `<div class="calibrate-hint">${t('calibrateHint')}</div>` : ''}
+      <div class="cta">${ctaFn(yieldPct)}</div>
+      ${(zone === 'warm' || zone === 'hot') ? `<div class="cta-dev-hint">${t('devHint')} <span class="dev-tag">${t('devTag')}</span></div>` : ''}
+      <div class="golden-quote">💡 ${quote}</div>
     </div>
   `;
+  lastResult.goldenQuote = quote;
   shareEl.classList.add('show');
   shareEl.textContent = t('share');
 }
@@ -356,103 +530,155 @@ function renderResult() {
 // ============ Share Image ============
 function shareImage() {
   if (!lastResult) return;
-  const { yieldPct, tier, level } = lastResult;
+  const { yieldPct, zone } = lastResult;
   const si = t('shareImg');
   const c = document.getElementById('shareCanvas');
   const ctx = c.getContext('2d');
   const W = 1080, H = 1080;
 
-  // Determine tier color
-  const tierColors = {
-    'tier-extra': '#534AB7',
-    'tier-anomaly': '#534AB7',
-    'tier-match': '#534AB7',
-    'tier-smooth': '#3B6D11',
-    'tier-steady': '#3D6B8D',
-    'tier-sticky': '#F57C00',
-    'tier-mud': '#993C1D',
-    'tier-broken': '#4A1B0C'
+  // Zone colors for share card
+  const zoneColors = {
+    cool: { ring: '#16A34A', bg: '#F0FDF4', text: '#2c2c2c' },
+    warm: { ring: '#D97706', bg: '#FFFBEB', text: '#2c2c2c' },
+    hot:  { ring: '#DC2626', bg: '#FEF2F2', text: '#2c2c2c' }
   };
-  const tierBgColors = {
-    'tier-extra': '#f9f8ff',
-    'tier-anomaly': '#f9f8ff',
-    'tier-match': '#f9f8ff',
-    'tier-smooth': '#F3F8EC',
-    'tier-steady': '#F0F5FA',
-    'tier-sticky': '#FFF8E1',
-    'tier-mud': '#FBF1ED',
-    'tier-broken': '#4A1B0C'
-  };
-  const color = tierColors[tier] || '#534AB7';
-  const bgColor = tierBgColors[tier] || '#f9f8ff';
-  const isDark = tier === 'tier-broken';
-  const textColor = isDark ? '#fff' : '#2c2c2c';
-  const subColor = isDark ? 'rgba(255,255,255,.7)' : '#5F5E5A';
+  const zColor = zoneColors[zone] || zoneColors.cool;
+  const isHot = zone === 'hot';
 
   // Background
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, W, H);
 
-  // Top area - score ring
-  const cx = W / 2, cy = 380;
-  // Ring
+  // Score ring
+  const cx = W / 2, cy = 360;
   ctx.beginPath();
   ctx.arc(cx, cy, 180, 0, Math.PI * 2);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 10;
-  ctx.fillStyle = bgColor;
+  ctx.strokeStyle = zColor.ring;
+  ctx.lineWidth = 12;
+  ctx.fillStyle = zColor.bg;
   ctx.fill();
   ctx.stroke();
-  // Score
-  ctx.fillStyle = color;
+
+  // Score number
+  ctx.fillStyle = zColor.ring;
   ctx.font = 'bold 120px -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(yieldPct + '%', cx, cy + 30);
-  // Label
-  ctx.fillStyle = subColor;
+  ctx.fillText(yieldPct + '%', cx, cy + 35);
+
+  // Unit label
+  ctx.fillStyle = isHot ? 'rgba(220,38,38,.6)' : 'rgba(22,163,74,.6)';
   ctx.font = '28px -apple-system, sans-serif';
   ctx.fillText(t('unitLabel'), cx, cy + 80);
 
-  // Tier level
-  ctx.fillStyle = textColor;
-  ctx.font = 'bold 42px -apple-system, sans-serif';
-  ctx.fillText(level, cx, 670);
+  // Temperature bar on share card
+  const barY = 520;
+  const barW = 600, barH = 16, barLeft = (W - barW) / 2;
+  // Track gradient
+  const grad = ctx.createLinearGradient(barLeft, 0, barLeft + barW, 0);
+  grad.addColorStop(0, '#DC2626');
+  grad.addColorStop(0.5, '#D97706');
+  grad.addColorStop(0.8, '#D97706');
+  grad.addColorStop(0.8, '#16A34A');
+  grad.addColorStop(1, '#16A34A');
+  ctx.fillStyle = grad;
+  roundRect(ctx, barLeft, barY, barW, barH, 8);
+  ctx.fill();
 
-  // Subtitle
-  ctx.fillStyle = subColor;
-  ctx.font = '26px -apple-system, sans-serif';
-  ctx.fillText(si.subtitle, cx, 740);
-
-  // Divider
-  ctx.strokeStyle = isDark ? 'rgba(255,255,255,.2)' : '#e8e5ff';
-  ctx.lineWidth = 1;
+  // Marker dot
+  const markerX = barLeft + (clampPct(yieldPct) / 100) * barW;
   ctx.beginPath();
-  ctx.moveTo(240, 800);
-  ctx.lineTo(W - 240, 800);
+  ctx.arc(markerX, barY + barH/2, 14, 0, Math.PI * 2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.strokeStyle = zColor.ring;
+  ctx.lineWidth = 4;
   ctx.stroke();
 
+  // Bar labels
+  ctx.fillStyle = '#999';
+  ctx.font = '22px -apple-system, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('<50%', barLeft, barY + 48);
+  ctx.textAlign = 'center';
+  ctx.fillText('50-80%', cx, barY + 48);
+  ctx.textAlign = 'right';
+  ctx.fillText('80%+', barLeft + barW, barY + 48);
+
+  // Zone level
+  ctx.fillStyle = zColor.ring;
+  ctx.font = 'bold 44px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+  // Zone level text (pick from pool for share too)
+  const zoneData = t('zones')[zone];
+  const levelText = zoneData.levels[Math.floor(Math.random() * zoneData.levels.length)];
+  ctx.fillText(levelText, cx, 640);
+
+  // Subtitle
+  ctx.fillStyle = '#5F5E5A';
+  ctx.font = '26px -apple-system, sans-serif';
+  ctx.fillText(si.subtitle, cx, 700);
+
+  // Golden quote block on share card
+  const qText = lastResult.goldenQuote || '';
+  ctx.font = 'bold 30px -apple-system, sans-serif';
+  const maxW = 800;
+  let qlines = [], qcur = '';
+  for (const ch of qText) {
+    const test = qcur + ch;
+    if (ctx.measureText(test).width > maxW && qcur) { qlines.push(qcur); qcur = ch; }
+    else qcur = test;
+  }
+  if (qcur) qlines.push(qcur);
+  qlines = qlines.slice(0, 2);
+  const qBoxH = qlines.length * 42 + 40;
+  const qBoxY = 730;
+  ctx.fillStyle = zColor.ring;
+  roundRect(ctx, 120, qBoxY, W - 240, qBoxH, 18);
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 30px -apple-system, sans-serif';
+  qlines.forEach((ln, i) => ctx.fillText(ln, cx, qBoxY + 46 + i * 42));
+  ctx.font = '22px -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,.75)';
+  ctx.fillText('💡 金句', cx, qBoxY + qBoxH - 14);
+
   // Slogan
-  ctx.fillStyle = subColor;
+  ctx.fillStyle = '#5F5E5A';
   ctx.font = '24px -apple-system, sans-serif';
-  ctx.fillText(si.slogan, cx, 870);
+  ctx.fillText(si.slogan, cx, 900);
 
   // Footer URL
-  ctx.fillStyle = isDark ? 'rgba(255,255,255,.5)' : '#b0b0b0';
+  ctx.fillStyle = '#b0b0b0';
   ctx.font = '20px -apple-system, sans-serif';
-  ctx.fillText(si.footer, cx, 970);
+  ctx.fillText(si.footer, cx, 960);
 
-  // H₂O brand mark top-left
-  ctx.fillStyle = color;
+  // Brand mark top-left
+  ctx.fillStyle = zColor.ring;
   ctx.font = 'bold 32px -apple-system, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('H₂O', 60, 80);
   ctx.textAlign = 'center';
 
-  // Trigger download
+  // Download
   const link = document.createElement('a');
-  link.download = 'h2o-logic-concentration.png';
+  link.download = 'h2o-clarity-thermometer.png';
   link.href = c.toDataURL('image/png');
   link.click();
+}
+
+// Helper: rounded rect for canvas
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
 }
 
 // ============ Init ============
