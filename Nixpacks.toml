@@ -1,0 +1,11 @@
+# Nixpacks 配置：告诉 Railway 如何构建和运行 H2O 体温计 API
+# Railway 默认用 Nixpacks 自动检测；纯 Python http.server 项目需要显式声明
+
+[phases.setup]
+nixPkgs = ["python312"]
+
+[phases.install]
+cmds = ["echo 'No dependencies - pure Python stdlib only'"]
+
+[start]
+cmd = "python h2o-thermometer-api.py"
