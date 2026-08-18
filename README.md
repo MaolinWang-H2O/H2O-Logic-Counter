@@ -5,8 +5,8 @@
 
 ---
 
-> 📍 **H₂O Four-Layer Architecture** · L4 Counter (Tool) | Previous: [← L3 Action](https://github.com/MaolinWang-H2O/H2O-Action-Layer)
-> 📍 **H₂O 四层架构** · L4 Counter (工具) | 上一篇: [← L3 招式](https://github.com/MaolinWang-H2O/H2O-Action-Layer)
+> 📍 **H₂O Four-Layer Architecture** · L4 Counter  | Previous: [← L3 Action](https://github.com/MaolinWang-H2O/H2O-Action-Layer)
+> 📍 **H₂O 四层架构** · L4 Counter (计算器) | 上一篇: [← L3 招式](https://github.com/MaolinWang-H2O/H2O-Action-Layer)
 
 ## 0. Why This Calculator / 为什么需要这个计算器
 
@@ -150,4 +150,4 @@ H₂O 协议提供了完整的审计框架：
 ## 7. What's Behind This? / 这背后的逻辑是什么？
 
 ## Loop Back / 回到起点
-→ [**L1 Axiom**](https://github.com/MaolinWang-H2O/h2o-tri-state-protocol) — Why H₂O? Form is fluid; essence is constant. / 为什么是水？水无常形·水性不变。
+→ [**L1 Axiom / 公理**](https://github.com/MaolinWang-H2O/h2o-tri-state-protocol) — Why H₂O? Form is fluid; essence is constant. / 为什么是水？水无常形·水性不变。
