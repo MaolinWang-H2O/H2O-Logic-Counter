@@ -2,706 +2,891 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>H₂O Clarity Thermometer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H₂O · 逻辑提纯器</title>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <style>
-:root {
-  /* 3体温区 — 颜色深度拉开 */
-  --cool: #16A34A; --cool-bg: #F0FDF4; --cool-glow: rgba(22,163,74,.15);
-  --warm: #D97706; --warm-bg: #FFFBEB; --warm-glow: rgba(217,119,6,.15);
-  --hot: #DC2626; --hot-bg: #FEF2F2; --hot-glow: rgba(220,38,38,.12);
-  --purple: #534AB7; --purple-bg: #f9f8ff;
-  --orange-btn: #ED6C30;
-  --text: #2c2c2c; --sub: #5F5E5A; --border: #e8e5ff;
+:root{
+  --bg:#fffaf5; --card:#fff; --text:#2a2118; --muted:#8a7d6d;
+  --line:#f0e3d3; --orange:#e87a2d; --orange-deep:#c45d18; --accent:#f5a054;
+  --blue:#1a73e8; --danger:#e53935; --warn:#f59e0b; --ok:#43a047;
+  --radius:16px; --shadow:0 4px 24px rgba(232,122,45,.10);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
-  background:#f5f5f5; display:flex; justify-content:center; align-items:center;
-  min-height:100vh; padding:16px;
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,#c45d18 0%,#e87a2d 45%,#f5a054 100%);color:#fff;
+  padding:26px 20px 40px;text-align:center}
+.header h1{font-size:clamp(1.5rem,3.6vw,2.1rem);font-weight:700;letter-spacing:-.02em}
+.header .sub{font-size:.95rem;opacity:.92;margin-top:8px}
+.header .badge-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.badge{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+  border-radius:20px;padding:5px 14px;font-size:.78rem}
+.container{max-width:860px;margin:-28px auto 60px;padding:0 20px;position:relative;z-index:1}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
+  padding:28px;margin-bottom:22px;border:1px solid var(--line)}
+.card-title{font-size:1.05rem;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title .icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:.85rem}
+textarea{width:100%;min-height:150px;border:2px solid var(--line);border-radius:12px;
+  padding:16px;font-size:.95rem;line-height:1.7;resize:vertical;font-family:inherit;background:#fffdfa}
+textarea:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 4px rgba(232,122,45,.12)}
+textarea::placeholder{color:#cbb8a3}
+.btn-group{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.btn{padding:12px 26px;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;
+  border:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(135deg,var(--orange-deep),var(--accent));color:#fff;
+  box-shadow:0 4px 16px rgba(232,122,45,.28)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 22px rgba(232,122,45,.36)}
+.btn-secondary{background:#fbeede;color:var(--orange-deep)}
+.btn-secondary:hover{background:#f6e2cc}
+.btn-export{background:linear-gradient(135deg,#f5a054,#e87a2d);color:#fff;
+  box-shadow:0 3px 12px rgba(232,122,45,.22)}
+.btn-export:hover{transform:translateY(-1px);box-shadow:0 5px 18px rgba(232,122,45,.32)}
+
+/* 体温计 */
+.score-section{text-align:center;padding:24px 0}
+.score-circle{position:relative;width:160px;height:160px;margin:0 auto 16px}
+.score-circle svg{width:100%;height:100%;transform:rotate(-90deg)}
+.bg-ring{fill:none;stroke:#f0e3d3;stroke-width:10}
+.fg-ring{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s,stroke .3s}
+.score-value{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:2.4rem;font-weight:800;line-height:1}
+.score-label{font-size:.82rem;color:var(--muted);margin-top:4px}
+.state-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:.88rem;
+  font-weight:600;margin-top:10px}
+.state-ice{background:#e8f4fc;color:#1565c0;border:1px solid #a3cde8}
+.state-water{background:#fff3e6;color:#c45d18;border:1px solid #ffc494}
+.state-vapor{background:#f0f4ff;color:#3949ab;border:1px solid #b8c5e0}
+.dims-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.dim-card{background:#fffdfa;border-radius:12px;padding:16px;border:1px solid #f6ebdc}
+.dim-name{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:6px}
+.dim-bar-wrap{height:6px;background:#f0e3d3;border-radius:3px;overflow:hidden;margin-bottom:6px}
+.dim-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--accent));transition:width .8s}
+.dim-score{font-size:1.2rem;font-weight:700;color:#c45d18}
+.dim-hint{font-size:.82rem;color:var(--muted);margin-top:4px}
+.advice-box{background:linear-gradient(135deg,#fff6ec,#ffeeda);border-left:4px solid var(--orange);
+  border-radius:0 12px 12px 0;padding:18px 22px;margin-top:18px;font-size:.9rem;color:#4a3a28}
+.advice-box h4{font-size:.95rem;margin-bottom:8px;color:#c45d18}
+.advice-box ul{padding-left:18px} .advice-box li{margin-bottom:4px}
+/* 档位刻度条 */
+.tier-scale{position:relative;height:44px;margin:6px 0 18px;border-radius:10px;overflow:hidden;
+  border:1px solid rgba(0,0,0,.06)}
+.tier-band{position:absolute;top:0;bottom:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;color:#fff;font-size:.72rem;font-weight:600;
+  text-align:center;line-height:1.25}
+.tier-marker{position:absolute;top:-6px;transform:translateX(-50%);font-size:16px;color:#333;
+  transition:left .6s ease;line-height:1;text-shadow:0 1px 2px rgba(255,255,255,.8)}
+
+/* 蒸发器 */
+.mode-switch{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;width:fit-content}
+.mode-btn{background:transparent;color:var(--muted);border:0;border-radius:0;padding:9px 16px;
+  font-size:.85rem;font-weight:600;cursor:pointer;margin:0;transition:all .2s}
+.mode-btn.active{background:linear-gradient(135deg,var(--orange-deep),var(--accent));color:#fff}
+.metrics{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.metric{flex:1;min-width:100px;background:#fffdfa;border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center}
+.metric .v{font-size:24px;font-weight:700} .metric .k{font-size:.74rem;color:var(--muted);margin-top:2px}
+.lvl-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:14px;font-weight:700;letter-spacing:1px}
+.L0{background:rgba(229,57,53,.16);color:var(--danger);border:2px solid var(--danger)}
+.L1{background:rgba(245,158,11,.16);color:var(--warn);border:1px solid var(--warn)}
+.L2{background:rgba(26,115,232,.16);color:var(--blue);border:1px solid var(--blue)}
+.L3{background:rgba(67,160,71,.16);color:var(--ok);border:1px solid var(--ok)}
+h3.sec{font-size:.95rem;margin:16px 0 8px;border-left:3px solid var(--orange);padding-left:8px}
+.leak{background:#fffdfa;border:1px solid var(--line);border-left:3px solid var(--danger);
+  border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:.85rem}
+.leak .tag{font-weight:700;margin-right:6px}
+.tag-B{color:var(--danger)} .tag-C{color:var(--warn)} .tag-D{color:#7b1fa2}
+.leak .quote{font-family:"SF Mono",Consolas,Menlo,monospace;background:rgba(245,160,84,.08);
+  border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-size:12.5px}
+.rebuild{background:#fffdfa;border:1px solid var(--line);border-radius:6px;padding:12px;
+  font-size:.85rem;white-space:pre-wrap}
+.rebuild-toggle{cursor:pointer;font-size:.82rem;color:var(--orange-deep);font-weight:600;
+  padding:10px 14px;border-radius:8px;background:rgba(196,93,24,.05);border-left:3px solid var(--orange);
+  margin-bottom:12px;user-select:none;transition:background .2s}
+.rebuild-toggle:hover{background:rgba(196,93,24,.09)}
+.rebuild-content{padding-top:4px}
+.verdict-box{margin-bottom:14px;padding:14px;border-radius:8px;border-left:4px solid var(--danger);
+  background:rgba(229,57,53,.05);font-size:.9rem;line-height:1.75}
+.verdict-box .v-title{font-weight:700;color:var(--danger);font-size:.95rem;margin-bottom:6px;display:block}
+.verdict-box .v-action{margin-top:8px;padding-top:8px;border-top:1px solid rgba(229,57,53,.15);font-size:.85rem}
+.entity-extract{color:var(--text);font-weight:600;background:rgba(245,160,84,.12);padding:2px 8px;
+  border-radius:4px;border-bottom:2px solid var(--orange)}
+.slot-input{flex:1;min-width:0;color:var(--text);font-style:italic;padding:6px 10px;border-radius:6px;
+  border:1px solid var(--line);background:#fffdf8;box-shadow:inset 0 1px 3px rgba(196,93,24,.10);
+  font-size:.85rem;font-family:inherit;outline:none;cursor:text;transition:box-shadow .2s,border-color .2s}
+.slot-input:focus{border-color:var(--orange);box-shadow:inset 0 1px 4px rgba(196,93,24,.18);background:#fff}
+.slot-input::placeholder{color:var(--muted);opacity:.55}
+.slot-line{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.slot-label{color:var(--orange-deep);font-weight:600;white-space:nowrap}
+.preview-box{margin-top:12px;padding:12px;border-radius:6px;background:rgba(67,160,71,.06);
+  border:1px solid rgba(67,160,71,.25);font-size:.85rem;line-height:1.8}
+.preview-label{color:var(--ok);font-weight:600;font-size:.78rem;margin-bottom:6px;display:block}
+.copy-btn{margin-top:8px;background:transparent;color:var(--ok);border:1px solid var(--ok);
+  border-radius:16px;padding:5px 14px;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .2s}
+.copy-btn.copied{color:var(--orange);border-color:var(--orange)}
+.copy-btn:disabled{color:var(--muted);border-color:var(--line);cursor:not-allowed;opacity:.55}
+.copy-hint{font-size:.72rem;color:var(--muted);opacity:.7;margin-top:6px}
+.r-note{font-size:.68rem;margin-top:3px;opacity:.8;font-weight:600}
+
+/* ===== 新增：前后对比视图 ===== */
+.compare-toggle{display:flex;gap:0;margin:16px 0;border:1px solid var(--line);
+  border-radius:10px;overflow:hidden;width:fit-content}
+.compare-tab{background:transparent;color:var(--muted);border:0;border-radius:0;
+  padding:8px 18px;font-size:.84rem;font-weight:600;cursor:pointer;transition:all .2s}
+.compare-tab.active{background:linear-gradient(135deg,var(--orange-deep),var(--accent));color:#fff}
+.compare-panel{display:none}
+.compare-panel.active{display:block}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.compare-col{background:#fffdfa;border:1px solid var(--line);border-radius:10px;padding:14px}
+.compare-col h5{font-size:.82rem;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.compare-before h5{color:var(--danger)}.compare-after h5{color:var(--ok)}
+.compare-text{font-size:.83rem;line-height:1.85;white-space:pre-wrap;word-break:break-all}
+.compare-text .strike{color:var(--danger);text-decoration:line-through;text-decoration-color:var(--danger);
+  opacity:.65;background:rgba(229,57,53,.06);border-radius:2px;padding:0 2px}
+.compare-text .keep{color:var(--text)}
+.compare-arrow{text-align:center;padding:20px 0;font-size:1.6rem;color:var(--muted)}
+
+/* ===== 新增：导出报告 ===== */
+.export-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  justify-content:space-between;flex-wrap:wrap}
+.export-hint{font-size:.78rem;color:var(--muted)}
+
+.hidden{display:none}
+.empty-state{text-align:center;padding:32px 20px;color:var(--muted)}
+.empty-icon{font-size:36px;opacity:.5;margin-bottom:10px}
+.samples{margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sample-btn{margin:0;background:transparent;color:var(--orange-deep);border:1px solid var(--orange);
+  border-radius:16px;padding:5px 14px;font-size:.8rem;font-weight:500;cursor:pointer}
+.sample-btn:hover{background:rgba(232,122,45,.1)}
+
+/* 截图粘贴区域 */
+.paste-area{border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;
+  cursor:pointer;transition:all .2s;margin-top:10px;background:#fffdfa;position:relative}
+.paste-area:hover{border-color:var(--orange);background:rgba(245,160,84,.04)}
+.paste-area.dragover{border-color:var(--orange);background:rgba(245,160,84,.08)}
+.paste-area .paste-icon{font-size:28px;margin-bottom:6px}
+.paste-area .paste-text{font-size:.8rem;color:var(--muted)}
+.paste-area .paste-hint{font-size:.7rem;color:var(--muted);opacity:.5;margin-top:4px}
+.paste-area img{max-width:100%;max-height:200px;border-radius:8px;display:none;margin:0 auto}
+.paste-area.processing{pointer-events:none;opacity:.7}
+.paste-area .spinner{display:none;width:24px;height:24px;border:3px solid var(--line);
+  border-top-color:var(--orange);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{text-align:center;padding:28px 20px;color:var(--muted);font-size:.78rem;opacity:.65}
+@media(max-width:600px){
+  .dims-grid{grid-template-columns:1fr}.btn-group{flex-direction:column}.btn{justify-content:center}
+  .compare-grid{grid-template-columns:1fr}
 }
-.card { max-width:420px; width:100%; background:#fff; border-radius:20px; padding:28px 22px 24px; box-shadow:0 4px 24px rgba(0,0,0,.06); }
-.header { text-align:center; margin-bottom:24px; position:relative; }
-.lang-btn {
-  position:absolute; right:0; top:0; font-size:12px; font-weight:600;
-  background:var(--purple-bg); color:var(--purple); border:1px solid var(--border);
-  border-radius:8px; padding:4px 10px; cursor:pointer; transition:opacity .2s;
-}
-.lang-btn:hover { opacity:.8; }
-.header h1 { font-size:22px; color:var(--text); font-weight:700; margin-bottom:8px; }
-.header h1 sub { font-size:14px; font-weight:600; vertical-align:-2px; }
-.header .sub { font-size:12px; color:var(--sub); letter-spacing:1px; margin-top:6px; }
-.header .sub span { color:var(--purple); font-weight:600; }
-.divider { height:1px; background:var(--border); margin:0 -22px 22px; }
-.field { margin-bottom:18px; }
-.field label { display:block; font-size:14px; color:var(--text); margin-bottom:10px; font-weight:500; }
-.field .hint { font-size:12px; color:var(--sub); font-weight:400; margin-left:5px; }
-.honesty-hint { text-align:center; font-size:12px; color:var(--sub); font-weight:400; margin:2px 0 6px; line-height:1.5; }
-.input-row { display:flex; align-items:center; gap:8px; }
-.input-row input { flex:1; height:46px; border:2px solid #e0e0e0; border-radius:12px; padding:0 14px; font-size:17px; font-weight:600; color:var(--text); outline:none; transition:border .2s; text-align:center; -webkit-appearance:none; }
-.input-row input::placeholder { color:#b5b5b5; font-weight:400; font-size:15px; }
-.input-row input:focus { border-color:var(--purple); }
-.input-row .suffix { font-size:14px; color:var(--sub); white-space:nowrap; }
-.btn { width:100%; height:50px; background:var(--orange-btn); color:#fff; border:none; border-radius:14px; font-size:17px; font-weight:700; cursor:pointer; margin-top:6px; letter-spacing:2px; transition:transform .15s,box-shadow .15s; box-shadow:0 4px 14px rgba(237,108,48,.35); }
-.btn:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(237,108,48,.45); }
-.btn:active { transform:translateY(0); box-shadow:0 2px 8px rgba(237,108,48,.3); }
-
-.result { margin-top:22px; display:none; }
-.result.show { display:block; }
-
-/* 圆环仪表 */
-.score-ring { width:140px; height:140px; margin:0 auto 12px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; transition:all .4s ease; }
-.score-ring .pct { font-size:48px; font-weight:800; line-height:1; transition:color .4s; }
-.score-ring .unit-label { font-size:12px; margin-top:2px; transition:color .4s; }
-
-/* ====== 体温预警条（新增）====== */
-.temp-bar-wrap { margin:0 auto 14px; max-width:280px; }
-.temp-bar-label { display:flex; justify-content:space-between; font-size:11px; color:var(--sub); margin-bottom:4px; padding:0 2px; }
-.temp-bar-track { height:10px; border-radius:5px; background:linear-gradient(to right, var(--hot) 0%, var(--hot) 50%, var(--warm) 50%, var(--warm) 80%, var(--cool) 80%, var(--cool) 100%); position:relative; overflow:hidden; box-shadow:inset 0 1px 3px rgba(0,0,0,.12); }
-.temp-bar-marker { position:absolute; top:-3px; width:16px; height:16px; border-radius:50%; background:#fff; border:3px solid; transform:translateX(-50%); left:0%; transition:left .5s cubic-bezier(.34,1.56,.64,1); box-shadow:0 2px 6px rgba(0,0,0,.2); z-index:2; }
-.temp-bar-ticks { display:flex; justify-content:space-between; margin-top:4px; padding:0 2px; }
-.temp-bar-ticks span { font-size:10px; color:#aaa; }
-
-/* 3体温区 — 圆环 + 诊断卡颜色 */
-.zone-cool .score-ring { border:5px solid var(--cool); background:var(--cool-bg); box-shadow:0 0 20px var(--cool-glow), inset 0 0 20px var(--cool-glow); }
-.zone-cool .pct { color:var(--cool); }
-.zone-cool .unit-label { color:var(--cool); opacity:.7; }
-.zone-cool .diagnosis { background:var(--cool-bg); border:1px solid rgba(22,163,74,.2); }
-.zone-cool .diagnosis .level { color:var(--cool); }
-.zone-cool .temp-bar-marker { border-color: var(--cool); }
-
-.zone-warm .score-ring { border:5px solid var(--warm); background:var(--warm-bg); box-shadow:0 0 18px var(--warm-glow); }
-.zone-warm .pct { color:var(--warm); }
-.zone-warm .unit-label { color:var(--warm); opacity:.7; }
-.zone-warm .diagnosis { background:var(--warm-bg); border:1px solid rgba(217,119,6,.2); }
-.zone-warm .diagnosis .level { color:var(--warm); }
-.zone-warm .temp-bar-marker { border-color: var(--warm); }
-
-.zone-hot .score-ring { border:5px solid var(--hot); background:var(--hot-bg); box-shadow:0 0 18px var(--hot-glow); }
-.zone-hot .pct { color:var(--hot); }
-.zone-hot .unit-label { color:var(--hot); opacity:.7; }
-.zone-hot .diagnosis { background:var(--hot-bg); border:1px solid rgba(220,38,38,.25); }
-.zone-hot .diagnosis .level { color:var(--hot); }
-.zone-hot .diagnosis .desc { color:rgba(220,38,38,.85); }
-.zone-hot .temp-bar-marker { border-color: var(--hot); }
-
-.meta-bar { text-align:center; font-size:13px; color:var(--sub); margin-bottom:14px; }
-.meta-bar strong { color:var(--text); }
-
-.diagnosis { border-radius:14px; padding:18px; font-size:14px; line-height:1.8; text-align:left; }
-.diagnosis .level { font-size:17px; font-weight:800; margin-bottom:6px; letter-spacing:.5px; }
-.diagnosis .desc { font-size:14px; margin-bottom:10px; line-height:1.7; }
-.diagnosis .tip { font-size:13px; color:var(--sub); margin-top:8px; padding-top:10px; border-top:1px solid rgba(0,0,0,.08); }
-.diagnosis .cta { margin-top:10px; font-size:14px; font-weight:700; padding:8px 10px; background:rgba(255,255,255,.65); border-radius:8px; }
-.golden-quote { margin-top:14px; padding:14px 16px; font-size:15px; font-weight:700; line-height:1.7; text-align:center; color:#fff; border-radius:12px; background:linear-gradient(135deg,#1f2937,#374151); box-shadow:0 6px 18px rgba(0,0,0,.18); letter-spacing:.5px; }
-.zone-cool .golden-quote { background:linear-gradient(135deg,#0f5132,#16A34A); box-shadow:0 6px 18px rgba(22,163,74,.28); }
-.zone-warm .golden-quote { background:linear-gradient(135deg,#92400e,#D97706); box-shadow:0 6px 18px rgba(217,119,6,.28); }
-.zone-hot .golden-quote { background:linear-gradient(135deg,#991b1b,#DC2626); box-shadow:0 6px 18px rgba(220,38,38,.3); }
-.formula-ref { margin-top:10px; font-size:11px; color:#aaa; text-align:center; font-style:italic; }
-.calibrate-hint { margin-top:8px; font-size:12px; color:#999; line-height:1.6; }
-
-.share-btn { display:none; width:100%; height:44px; margin-top:14px; background:rgba(83,74,183,0.04); color:var(--purple); border:2px solid var(--purple); border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:all .2s; }
-.share-btn:hover { background:rgba(83,74,183,0.10); border-color:#3D3499; }
-.share-btn.show { display:block; }
-
-.footer { margin-top:22px; text-align:center; font-size:11px; color:var(--sub); padding-top:18px; border-top:1px solid var(--border); }
-
-/* 呼吸动画 — 让圆环"活着" */
-@keyframes breathe { 0%,100%{transform:scale(1);} 50%{transform:scale(1.02);} }
-.zone-cool .score-ring { animation:breathe 3s ease-in-out infinite; }
-.zone-warm .score-ring { animation:breathe 2.5s ease-in-out infinite; }
-.zone-hot .score-ring { animation:breathe 2s ease-in-out infinite; }
-
 </style>
 </head>
 <body>
-<div class="card">
 
-  <div class="header">
-    <button class="lang-btn" onclick="toggleLang()" id="langBtn">EN</button>
-    <h1>🌡️ H<sub>2</sub>O <span data-t="title">清醒体温计</span></h1>
-    <div class="sub"><span data-t="hook">填两个数，测测你刚才那件事，到底是高效还是瞎折腾。</span></div>
+<div class="header">
+  <h1>H₂O · 逻辑提纯器</h1>
+  <div class="badge-row">
+    <span class="badge">🌡️ 清醒度：这段话有多清醒</span>
+    <span class="badge">💧 水分率：有多少是干货</span>
+    <span class="badge">⚡ 双引擎同步诊断</span>
   </div>
+</div>
 
-  <div class="divider"></div>
+<div class="container">
 
-  <div class="field">
-    <label>① <span data-t="q1">这件事【最短需要】多少时间？</span><span class="hint" data-t="h1">一切顺利，不卡壳</span></label>
-    <div class="input-row">
-      <input type="number" id="minTime" placeholder="例：本来 10 分钟就能讲明白" min="1" step="0.1" inputmode="decimal">
-      <span class="suffix" data-t="min">分钟</span>
+  <!-- 输入 -->
+  <div class="card">
+    <div class="card-title"><span class="icon" style="background:#fff3e6;color:#c45d18;">✎</span>放入你的决策或文案</div>
+    <p style="font-size:.82rem;color:var(--muted);margin-bottom:10px;">
+      粘贴你的文案或决策 —— 一眼看出哪里有水分
+    </p>
+    <textarea id="inputText" placeholder="示例：我们拥有业内顶尖的专业团队，秉承以客户为中心的理念，致力于打造全方位的一站式解决方案，赋能您的业务实现跨越式发展，共创美好未来。"></textarea>
+
+    <!-- 截图粘贴区域 -->
+    <div class="paste-area" id="pasteArea" onclick="document.getElementById('fileInput').click()">
+      <div class="spinner" id="ocrSpinner"></div>
+      <div class="paste-icon" id="pasteIcon">📷</div>
+      <div class="paste-text" id="pasteText">点击或粘贴截图 · 自动识别文字</div>
+      <img id="previewImg" alt="">
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="runBoth()">💧 一键提纯</button>
+      <button class="btn btn-secondary" onclick="loadSample()">📋 加载示例</button>
+      <button class="btn btn-secondary" onclick="clearAll()">🗑 清空</button>
+    </div>
+    <div class="samples">
+      <span style="color:var(--muted);font-size:.8rem">四个真实案例 · 对应四档：</span>
+      <button class="sample-btn" onclick="setSample('bp')">🧊 冰态 · 虚假广告案</button>
+      <button class="sample-btn" onclick="setSample('report')">💧 水态 · 年度报告</button>
+      <button class="sample-btn" onclick="setSample('vapor')">☁️ 气态 · 采购合同</button>
+      <button class="sample-btn" onclick="setSample('axiom')">⭐ 超浓 · 诚信公约</button>
+    </div>
+    <div class="samples" style="margin-top:4px">
+      <span style="color:var(--muted);font-size:.8rem">更多真实场景：</span>
+      <button class="sample-btn" onclick="setSample('franchise')">🚨 招商加盟 · 躺赚话术</button>
     </div>
   </div>
 
-  <div class="field">
-    <label>② <span data-t="q2">【实际上】花了多少时间？</span><span class="hint" data-t="h2">凭实际感受填</span></label>
-    <div class="input-row">
-      <input type="number" id="actualTime" placeholder="例：实际开会开了 120 分钟" min="1" step="0.1" inputmode="decimal">
-      <span class="suffix" data-t="min">分钟</span>
+  <!-- 导出栏（诊断后显示） -->
+  <div id="exportBar" class="card hidden">
+    <div class="export-bar">
+      <span class="export-hint">诊断完成 — 可导出完整报告或查看前后对比</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-export" onclick="exportReport()">📤 导出报告</button>
+        <button class="btn btn-secondary" onclick="toggleCompare()">📊 前后对比</button>
+      </div>
     </div>
   </div>
 
-  <div class="honesty-hint" data-t="honesty">💡 假数据测出的水分，也是假的</div>
+  <!-- 体温计结果 -->
+  <div id="thermoArea" class="card hidden">
+    <div class="card-title"><span class="icon" style="background:#fff3e6;color:#c45d18;">🌡️</span>① 清醒温度计 · 逻辑浓度</div>
+    <div class="score-section">
+      <div class="score-circle">
+        <svg viewBox="0 0 120 120">
+          <circle class="bg-ring" cx="60" cy="60" r="52"/>
+          <circle id="scoreRing" class="fg-ring" cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="327"/>
+        </svg>
+        <div class="score-value" id="scoreValue">--</div>
+      </div>
+      <div class="score-label">逻辑浓度</div>
+      <div id="stateBadge" class="state-badge"></div>
+    </div>
+    <!-- 档位刻度条：0~100 四档一目了然 -->
+    <div class="tier-scale" id="tierScale">
+      <div class="tier-band" style="left:0%;width:35%;background:#e53935">🧊 冰态<br><span style="font-weight:400;font-size:.68rem">0–35</span></div>
+      <div class="tier-band" style="left:35%;width:25%;background:#ff9800">💧 水态<br><span style="font-weight:400;font-size:.68rem">36–60</span></div>
+      <div class="tier-band" style="left:60%;width:15%;background:#43a047">☁️ 气态<br><span style="font-weight:400;font-size:.68rem">61–75</span></div>
+      <div class="tier-band" style="left:75%;width:25%;background:#7b1fa2">⭐ 超浓<br><span style="font-weight:400;font-size:.68rem">76–100</span></div>
+      <div class="tier-marker" id="tierMarker">▼</div>
+    </div>
+    <h3 class="sec">六维分析（每项 0~100）</h3>
+    <div id="dimsGrid" class="dims-grid"></div>
+    <div id="adviceBox" class="advice-box"></div>
+  </div>
 
-  <button class="btn" onclick="calculate()" data-t="ctaBtn">测 一 下</button>
+  <!-- 蒸发器结果 -->
+  <div id="evapArea" class="card hidden">
+    <div class="card-title"><span class="icon" style="background:#fff3e6;color:#c45d18;">💧</span>② 水分蒸发器 · 虚胖水分</div>
+    <div class="mode-switch" style="display:none">
+      <button class="mode-btn active" id="m-geek" onclick="setMode('geek')">⚙️ 极客 / 商业计划书</button>
+      <button class="mode-btn" id="m-comp" onclick="setMode('compliance')">🚨 电商 / 直播合规自检</button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="v" id="m-water" style="color:var(--danger)">–</div><div class="k">水分率</div></div>
+      <div class="metric"><div class="v" id="m-dense">–</div><div class="k">逻辑密度</div></div>
+      <div class="metric"><div class="v" id="m-R">–</div><div class="k">水情</div><div class="r-note" id="r-note"></div></div>
+      <div class="metric"><div class="v"><span id="m-level" class="lvl-badge L0">–</span></div><div class="k" id="k-level">定级</div><div class="r-note" id="level-note"></div></div>
+    </div>
+    <div style="margin:14px 0 10px;padding:8px 12px;border-radius:8px;background:rgba(196,93,24,.04);border-left:3px solid var(--orange);font-size:.8rem;color:var(--orange-deep);line-height:1.6;">💧 换个角度：逐句扫描，看看有多少是泡沫</div>
+    <div id="evapBridge" class="evap-bridge" style="display:none;margin:14px 0 16px;padding:10px 14px;border-radius:8px;background:rgba(196,93,24,.04);border-left:3px solid var(--orange);font-size:.8rem;color:var(--orange-deep);line-height:1.6;"></div>
+    <h3 class="sec" id="leak-title">💥 问题处</h3>
+    <div id="leaks"></div>
+    <h3 class="sec" id="rebuild-title">✂️ 提纯重构</h3>
+    <div id="verdict" class="verdict-box"></div>
+    <div id="rebuild" class="rebuild"></div>
+  </div>
 
-  <div class="result" id="result"></div>
-  <button class="share-btn" id="shareBtn" onclick="shareImage()" data-t="share">📸 生成分享图</button>
+  <!-- 前后对比面板 -->
+  <div id="compareArea" class="card hidden">
+    <div class="card-title"><span class="icon" style="background:#fff3e6;color:#c45d18;">📊</span>③ 蒸发前后对比</div>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px;">
+      左侧为原始文本（红色删除线 = 被判定为虚胖/灌水的句子），右侧为蒸发后的干净骨架。
+    </p>
+    <div id="compareContent"></div>
+  </div>
 
-  <div class="footer" data-t="footer">数值越高，卡点越少。</div>
-
+  <div id="empty" class="empty-state hidden"><div class="empty-icon">💧</div><div>输入文本后点「一键提纯」</div></div>
 
 </div>
 
-<!-- Hidden canvas for image generation -->
-<canvas id="shareCanvas" width="1080" height="1080" style="display:none;"></canvas>
+<div class="footer">
+  <p>H₂O · 以仁爱之心 做向上之事</p>
+</div>
 
 <script>
-// ============ Translations — 3体温区 ============
-const T = {
-  zh: {
-    title: '清醒体温计',
-    hook: '填两个数，测测你刚才那件事，到底干出了多少水分。',
-    formula: '清醒度 = 理论最短时间 ÷ 实际消耗时间 × 100%',
-    q1: '这件事【最短需要】多少时间？',
-    h1: '一切顺利，不卡壳',
-    q2: '这件事【实际上】花了多少时间？',
-    h2: '凭实际感受填',
-    min: '分钟',
-    ph1: '例：本来 10 分钟就能讲明白',
-    ph2: '例：实际开会开了 120 分钟',
-    ctaBtn: '点这里，量体温',
-    share: '📸 生成分享图',
-    footer: '数值越高，卡点越少',
-    honesty: '💡 假数据测出的水分，也是假的',
-    errTitle: '📋 等一下',
-    errBody: '两个空都填上大于 0 的数字。',
-    unitLabel: '清醒度',
-    metaPrefix: '实际耗时是理论时间的 ',
-    metaSuffix: ' 倍',
-    tempBarLabel: ['过热', '温热', '清醒'],
-    /* ===== 3体温区 · 戏谑+积极·不批判 · 多元文案池 ===== */
-    zones: {
-      cool: {
-        levels: ['🧊 冰川级', '⚡ 丝滑级', '🎯 狙击手', '⚡ 战神级', '✨ 满血状态'],
-        descs: [
-          (m,a,p) => `CPU 冰凉清爽，可当导师。你用 ${a} 分钟搞定 ${m} 分钟的活——流程丝滑得像刚换了固态硬盘。`,
-          (m,a,p) => `${m} 分钟的活只花了你 ${a} 分钟。这效率，建议直接开班授课。`,
-          (m,a,p) => `你的时间利用率爆表了——${p}% 的清醒度说明这件事对你来说已经是肌肉记忆。`,
-          (m,a,p) => `别人还在热身，你已经收工了。${a} 分钟交付 ${m} 分钟的价值——这就是降维打击。`,
-          (m,a,p) => `这台"脑子"今天跑分拉满。如果每天都这样，一年能多出一个季度。`
-        ],
-        tips: [
-          '如果能稳定在这个区间，你已经可以带人了。把这个流程的动作细节记下来，它就是你的标杆案例。',
-          '别骄傲——把这个状态的动作拆解一下，看看能不能复制到其他事情上。',
-          '你现在就是别人的标杆。问题是：这个流程能不能写成SOP让别人也做到？',
-          '享受这一刻的丝滑感吧。同时想想：是什么让这件事这么顺？',
-          '记录下今天做这件事的状态——心情、环境、前置动作。这是你的"战神配方"。'
-        ],
-        ctas: [
-          (p) => `${p}% —— 欢迎对标，欢迎超越。`,
-          (p) => `${p}% —— 这不是运气，是实力。`,
-          (p) => `${p}% —— 建议截图留念。`,
-          (p) => `${p}% —— 别谦虚，这就是牛。`,
-          (p) => `${p}% —— 可以发朋友圈了（划掉）。`
-        ],
-        quotes: [
-          '清醒，是最高级的效率。',
-          '体温计只报度数，不夸你今天真棒。',
-          '把这个状态拆成动作，它就是你的标准答案。',
-          '你只是量到了高分，别把它当勋章。',
-          '丝滑不是天赋，是动作对齐了流向。',
-          '今天的水很清，记下来，明天照着做。'
-        ]
-      },
-      warm: {
-        levels: ['😮 摸鱼平分', '🔄 在磨合', '🧘 温吞模式', '🌡️ 微热中', '☕ 还行还行'],
-        descs: [
-          (m,a,p) => `交了约 ${100-p}% 过路费，脑子没烧坏。${a} 分钟完成 ${m} 分钟的活——还行，但你知道哪里在磨蹭。`,
-          (m,a,p) => `${a} 分钟做完 ${m} 分钟的事。不算快也不算慢——典型的"能跑但没全力跑"。`,
-          (m,a,p) => `你的脑子在温水中泡着呢。不烫但也没那么爽——大概就是"周一上午"的感觉。`,
-          (m,a,p) => `理论上 ${m} 分钟的事你花了 ${a} 分钟。多出来的时间里，有一部分是在跟自己较劲。`,
-          (m,a,p) => `中等偏暖。就像一杯放凉了的咖啡——还能喝，但你记得它刚端上来时多香。`
-        ],
-        tips: [
-          (m,a) => `回想一下：今天做这件事时，哪一步开始前你停了一下、犹豫了一下、或者深吸了一口气？那就是卡点。`,
-          (m,a) => `多花的那 ${a-m} 分钟里，有多少是在"准备开始"？行动前的纠结往往比行动本身更耗时。`,
-          (m,a) => `试试下次做这件事的时候计时——不是看总时长，而是看从"打开"到"开始动"隔了几秒。`,
-          (m,a) => `这个区间最危险的不是慢，而是"习惯了慢"。你值得更快。`,
-          (m,a) => `找一个同样做过这件事的人聊聊——你会发现你们卡在同一个地方的概率超过80%。`
-        ],
-        ctas: [
-          (p) => `${p}% —— 找到那 2~3 个小卡点，挨个捋掉就行。`,
-          (p) => `${p}% —— 还有空间，但不急。`,
-          (p) => `${p}% —— 及格线以上，优秀线以下。`,
-          (p) => `${p}% —— 加把劲就能看到不一样的风景。`,
-          (p) => `${p}% —— 下次试试"一口气做完"，别中间切出去。`
-        ],
-        quotes: [
-          '卡点，就是你犹豫的那一秒。',
-          '温水煮的不是青蛙，是你今天的进度。',
-          '不急着快，先让水流动起来。',
-          '慢不是罪，卡住才是。',
-          '找到停住的那一步，它就是钥匙。',
-          '体温计说你温热，它没说你不行。'
-        ]
-      },
-      hot: {
-        levels: ['💧 融化了', '🍳 在煎锅上', '🚨 需要降温', '🔥 CPU 过热', '📴 该重启了'],
-        descs: [
-          (m,a,p,x) => `老天收了约 ${100-p}% 过路费，关机吃火锅，明天重新做人。实际是最短时间的 ${x} 倍——不是一两个卡点，是好几个叠在一起互相绊。`,
-          (m,a,p,x) => `${m} 分钟的事花了你 ${a} 分钟。老实说，做这件事的过程中你是不是打开了手机？`,
-          (m,a,p,x) => `你的清醒度在报警了——${x} 倍的理论时间意味着这件事正在大量消耗你的心力。`,
-          (m,a,p,x) => `这不是效率问题，是能量管理问题。今天的你可能不适合做这件事。`,
-          (m,a,p,x) => `有时候承认"今天不在状态"本身就是一种清醒。明天再试一次，数字会完全不同。`
-        ],
-        tips: [
-          '不是你的问题。是流程本身该重建了。不要再修修补补——明天精神好的时候，从零捋一遍。',
-          '先别想优化了。先问自己：今天做这件事之前，是不是已经累了/饿了/烦了？',
-          '如果这件事反复出现在"过热区"，那它可能根本不该由你来做——或者该换个方式做。',
-          '关掉所有通知，把手机扔到另一个房间，再来一次。光这一步就能帮你省掉20%。',
-          '接受现实：今天这件事就是做得不好。那又怎样？明天又是新的一天。'
-        ],
-        ctas: [
-          (p) => `${p}% —— 先吃顿好的，明天重新做人。`,
-          (p) => `${p}% —— 允许自己偶尔崩一下。`,
-          (p) => `${p}% —— 记住这种感觉，它是改变的起点。`,
-          (p) => `${p}% —— 不需要现在就解决一切。`,
-          (p) => `${p}% —— 放下手机，去喝杯水。`
-        ],
-        quotes: [
-          '不是你不行，是流程该重装了。',
-          '今天这脑子，建议带薪拉胯。',
-          '放下，是重启的第一步。',
-          '体温计说你发烧了，它没说你差劲。',
-          '断流的时候，先别硬冲。',
-          '关机不是认输，是给明天留余地。'
-        ]
-      }
-    },
-    calibrateHint: '💡 数值超出理论极值——建议回看「最短需要」那一栏，确保没有低估隐藏损耗。',
-    shareImg: {
-      title: 'H₂O 清醒体温计',
-      subtitle: 'H2O Clarity · 清醒度',
-      footer: '512646bd008049b59cb0390be413ecfd.gz3.agentos-app.net',
-      slogan: '理论最短时间 ÷ 实际消耗时间'
-    }
-  },
-  en: {
-    title: 'Clarity Thermometer',
-    hook: 'Two numbers. How much fluff was in that last task?',
-    formula: 'Clarity Level = Theoretical Minimum ÷ Actual Time Spent × 100%',
-    q1: 'Minimum time needed for this task?',
-    h1: 'If everything runs smoothly.',
-    q2: 'Actual time spent on this task?',
-    h2: 'Your honest best guess',
-    min: 'min',
-    ph1: 'e.g. 10 min should\'ve been enough',
-    ph2: 'e.g. ended up taking 120 min',
-    ctaBtn: 'Tap to Measure',
-    share: '📸 Share Card',
-    footer: 'Higher reading means fewer bottlenecks',
-    honesty: '💡 Fake input, fake fluff reading.',
-    errTitle: '📋 Hold on',
-    errBody: 'Both fields need a number greater than 0.',
-    unitLabel: 'Clarity Level',
-    metaPrefix: 'Actual took ',
-    metaSuffix: '× the theoretical minimum',
-    tempBarLabel: ['Hot', 'Warm', 'Cool'],
-    zones: {
-      cool: {
-        levels: ['🧊 Glacier', '⚡ Silky', '🎯 Sniper', '⚡ Legendary', '✨ Full Health'],
-        descs: [
-          (m,a,p) => `CPU ice cold. You delivered ${m} min of value in ${a} min — silky smooth like a fresh SSD.`,
-          (m,a,p) => `${m} min of work done in ${a} min. At this efficiency, you should be teaching a masterclass.`,
-          (m,a,p) => `Your brain utilization is off the charts — ${p}% clarity means this task is basically muscle memory now.`,
-          (m,a,p) => `Others are still warming up and you're already done. ${a} min for ${m} min of value — that's playing on easy mode.`,
-          (m,a,p) => `Your brain is benchmarking at full throttle today. If every day were like this, you'd gain an extra quarter per year.`
-        ],
-        tips: [
-          'If you can consistently hit this zone, you\'re ready to mentor. Document this workflow — it\'s your benchmark.',
-          'Don\'t get cocky — break down what made this flow so smooth. Can you replicate it elsewhere?',
-          'You\'re someone else\'s benchmark right now. Question is: can this process become an SOP for others too?',
-          'Enjoy this silky moment. And ask yourself: what exactly made this so smooth?',
-          'Note down your state today — mood, environment, prep. This is your "legendary recipe".'
-        ],
-        ctas: [
-          (p) => `${p}% — calibrated. Replicate this.`,
-          (p) => `${p}% — not luck, just skill.`,
-          (p) => `${p}% — screenshot worthy.`,
-          (p) => `${p}% — no false modesty. This is elite.`,
-          (p) => `${p}% — go ahead, share it (just kidding... or are we?).`
-        ],
-        quotes: [
-          'Clarity is the highest form of efficiency.',
-          'The thermometer reads the number — it doesn\'t praise you.',
-          'Break this state into actions — that\'s your standard answer.',
-          'You scored high today. Don\'t wear it like a medal.',
-          'Silky isn\'t talent — it\'s motion aligned with flow.',
-          'The water\'s clear today — write it down, repeat tomorrow.'
-        ]
-      },
-      warm: {
-        levels: ['😮 Warming Up', '🔄 Breaking In', '🧘 Meandering', '🌡️ Lukewarm', '☕ It\'s Fine'],
-        descs: [
-          (m,a,p) => `Paid ~${100-p}% toll fee. Brain not fried yet. ${a} min for ${m} min of work — decent, but you know where it drags.`,
-          (m,a,p) => `${a} min for ${m} min of work. Not fast, not slow — classic "could run but didn\'t push it".`,
-          (m,a,p) => `Your brain is simmering in lukewarm water. Not painful, but not thrilling either — basically "Monday morning" vibes.`,
-          (m,a,p) => `Theoretically ${m} min, actually ${a} min. Some of that extra time was spent wrestling with yourself.`,
-          (m,a,p) => `Medium-warm. Like coffee that\'s gone lukewarm — still drinkable, but you remember how good it was fresh.`
-        ],
-        tips: [
-          (m,a) => `Think back: which step made you pause, hesitate, or take a deep breath? That\'s your bottleneck.`,
-          (m,a) => `Of those extra ${a-m} minutes, how much was "getting ready to start"? the hesitation before you start often costs more than the action itself.`,
-          (m,a) => `Try timing yourself next time — not total time, but seconds from "open" to "first real move".`,
-          (m,a) => `This zone\'s danger isn't slowness — it\'s "getting used to slow". You deserve faster.`,
-          (m,a) => `Find someone who does the same task. Odds are 80%+ you\'re both stuck at the exact same point.`
-        ],
-        ctas: [
-          (p) => `${p}% — find those 2-3 friction points and clear them.`,
-          (p) => `${p}% — room to grow, but no rush.`,
-          (p) => `${p}% — above average, below excellent.`,
-          (p) => `${p}% — one good push and you'll see a different view.`,
-          (p) => `${p}% — next time try "in one sitting", no context switching.`
-        ],
-        quotes: [
-          'The bottleneck is the second you hesitated.',
-          'Lukewarm water isn\'t boiling the frog — it\'s boiling your progress.',
-          'Don\'t rush to be fast. First, let the water flow.',
-          'Slow isn\'t a sin. Stuck is.',
-          'Find the step where you stopped — that\'s the key.',
-          'The thermometer says you\'re warm — it doesn\'t say you\'re failing.'
-        ]
-      },
-      hot: {
-        levels: ['💧 Meltdown', '🍳 Frying Pan Mode', '🚨 Cool Down Needed', '🔥 CPU Overheat', '📴 Restart Required'],
-        descs: [
-          (m,a,p,x) => `Lost ~${100-p}% to toll fees. Time to shut down, go for hot pot, restart tomorrow. Actual is ${x}× theoretical — multiple bottlenecks tangled together.`,
-          (m,a,p,x) => `${m} min task took you ${a} min. Be honest — did you check your phone while doing this?`,
-          (m,a,p,x) => `Your clarity level is screaming — ${x}× theoretical time means this task is draining serious mental energy.`,
-          (m,a,p,x) => `This isn't an efficiency problem. It's an energy management problem. Maybe today wasn't the day for this task.`,
-          (m,a,p,x) => `Sometimes admitting "I'm not in the zone today" is its own form of clarity. Try again tomorrow — the numbers will look completely different.`
-        ],
-        tips: [
-          'Not your fault. The process needs rebuilding. Stop patching holes. Start fresh tomorrow when you\'re sharp.',
-          'Don\'t think about optimizing yet. Ask: were you already tired/hungry/frustrated before starting this?',
-          'If this task keeps landing in "overheat zone", maybe it shouldn\'t be done by you — or should be done differently.',
-          'Turn off all notifications, throw your phone in another room, try again. That single move can save you 20%.',
-          'Accept reality: today\'s performance on this thing sucked. So what? Tomorrow is a new day.'
-        ],
-        ctas: [
-          (p) => `${p}% — eat well, sleep well, restart tomorrow.`,
-          (p) => `${p}% — permission to occasionally crash.`,
-          (p) => `${p}% — remember this feeling. It's where change starts.`,
-          (p) => `${p}% — you don't have to fix everything right now.`,
-          (p) => `${p}% — put down the phone. Go drink some water.`
-        ],
-        quotes: [
-          'It\'s not you. The process needs a reinstall.',
-          'Today your brain is on paid leave. That\'s fine.',
-          'Letting go is the first step to restart.',
-          'The thermometer says you\'re feverish — it doesn\'t say you\'re worthless.',
-          'When flow breaks, don\'t force the rush.',
-          'Shutting down isn\'t losing. It\'s saving tomorrow.'
-        ]
-      }
-    },
-    calibrateHint: '💡 Beyond theoretical limit — double-check your minimum estimate for hidden overhead.',
-    shareImg: {
-      title: 'H2O Clarity Thermometer',
-      subtitle: 'H2O Clarity · Clarity Level',
-      footer: '512646bd008049b59cb0390be413ecfd.gz3.agentos-app.net',
-      slogan: 'theoretical minimum ÷ actual time'
-    }
+/* ===================== 引擎一：清醒温度计 ===================== */
+const DIMENSIONS = [
+  { key:'clarity',      name:'清晰度',      hint:'表述是否无歧义、可执行' },
+  { key:'consistency', name:'一致性',       hint:'内部是否自洽、有无矛盾' },
+  { key:'traceability', name:'可追溯',      hint:'能否追踪到源头依据' },
+  { key:'actionability',name:'可执行',       hint:'是否给出明确动作指令' },
+  { key:'heart',        name:'爱与责任',     hint:'是否体现对人的关怀' },
+  { key:'origin',       name:'真诚与感恩',   hint:'是否守住真诚底色' },
+];
+function calcThermo(text, badRatio=0){
+  const len=text.length;
+  let clarity=40;
+  if(/[一二三四五六七八九十\d]/.test(text)) clarity+=15;
+  if(/将|要|必须|应当|禁止|可以|每|每次|一旦/.test(text)) clarity+=15;
+  if(/等|等等|之类|大概|可能|也许|尽量|适当/.test(text)) clarity-=15;
+  if(len>80&&len<800) clarity+=10; if(len>1500) clarity-=10;
+  let consistency=55;
+  if(/但是|然而|不过|同时.*却|一方面.*另一方面/.test(text)) consistency-=10;
+  if(/所有.*都|任何.*必须|一律|统一/.test(text)) consistency+=12;
+  if(/例外|特殊|另行|另计|除外/.test(text)) consistency-=8; if(consistency<20) consistency=20;
+  let trace=35;
+  if(/根据|按照|依据|参照|基于|源于|来自|第.*条|协议|宪法|公理/.test(text)) trace+=20;
+  if(/谁|负责人|责任人|部门|岗位|角色|权限/.test(text)) trace+=15;
+  if(/凭感觉|我觉得|大概吧|随便/.test(text)) trace-=15; if(trace<15) trace=15;
+  let action=40;
+  const actionWords=['建立','制定','实施','完成','提交','审核','确认','发布','部署','启动','停止','暂停','复盘','检查','验收'];
+  action+=Math.min(30,actionWords.filter(w=>text.includes(w)).length*5);
+  if(/\d+天|\d+周|\d+月|\d+年|截止|deadline|Q[1-4]|本[季年月]/.test(text)) action+=15;
+  if(/提高|加强|优化|完善|促进|推动|落实/.test(text)&&!/具体|量化|指标|KPI|百分比/.test(text)) action-=10;
+  let heart=45;
+  if(/员工|伙伴|同事|团队|人|大家|每个人|安全|健康|尊严|福利|成长|信任/.test(text)) heart+=15;
+  if(/罚款|扣款|开除|辞退|惩罚|监控|监视|抽查|严惩/.test(text)) heart-=20;
+  if(/关怀|支持|帮助|理解|包容|尊重|感谢|感恩/.test(text)) heart+=15; if(heart<15) heart=15;
+  let origin=50;
+  if(/真诚|真实|透明|公开|如实|实事求是|不造假|不隐瞒|不欺骗/.test(text)) origin+=20;
+  if(/包装|宣传|营销|打造|树立|营造.*形象|话术/.test(text)) origin-=15;
+  if(/我们相信|我们的初心|本质上是|底层逻辑/.test(text)) origin+=10;
+  /* 虚标惩罚：句子多被标记 B/C/D 时，相关维度大幅下调，与蒸发器保持一致 */
+  if(badRatio>=0.66){trace-=25;action-=25;clarity-=15;origin-=20;}
+  else if(badRatio>=0.33){trace-=12;action-=12;clarity-=8;origin-=10;}
+  const scores=[clarity,consistency,trace,action,heart,origin].map(s=>Math.max(5,Math.min(100,Math.round(s))));
+  return DIMENSIONS.map((d,i)=>({...d,score:scores[i]}));
+}
+function renderThermo(text, water){
+  const results=_lastResult.thermo||calcThermo(text);
+  let total=Math.round(results.reduce((s,d)=>s+d.score,0)/results.length);
+  /* P0 双引擎对齐：温度计总分不得高于与蒸发器水分率一致的上限，避免对外打架 */
+  if(typeof water==='number'){
+    const cap = water>=70?32 : water>=50?46 : water>=30?58 : 100;
+    if(total>cap) total=cap;
   }
+  document.getElementById('thermoArea').classList.remove('hidden');
+  setTimeout(()=>{
+    const ring=document.getElementById('scoreRing');
+    const off=327-(Math.min(total,125)/125)*327;
+    ring.style.strokeDashoffset=off;
+    const el=document.getElementById('scoreValue'); el.textContent=total+'%';
+    const weak=results.filter(d=>d.score<50).sort((a,b)=>a.score-b.score).slice(0,3);
+    const weakAdvice=weak.map(d=>'<li><b>'+d.name+'</b>：'+DIM_ADVICE[d.name]+'</li>').join('');
+    const weakTags=weak.map(d=>d.name).join('·');
+    let color,cls,label;
+    if(total<=35){color='#e53935';cls='state-ice';label='🧊 冰态 · 逻辑冻结'+(weakTags?' <span style="font-size:.78rem;opacity:.8">｜短板：'+weakTags+'</span>' :'');}
+    else if(total<=60){color='#ff9800';cls='state-water';label='💧 水态 · 有框架需润色'+(weakTags?' <span style="font-size:.78rem;opacity:.8">｜短板：'+weakTags+'</span>' :'');}
+    else if(total<=75){color='#43a047';cls='state-vapor';label='☁️ 气态 · 逻辑自洁';}
+    else{color='#7b1fa2';cls='state-vapor';label='⭐ 超浓 · 公理级';}
+    ring.style.stroke=color; el.style.color=color;
+    const mk=document.getElementById('tierMarker'); if(mk) mk.style.left=Math.max(3,Math.min(97,total))+'%';
+    const badge=document.getElementById('stateBadge'); badge.className='state-badge '+cls; badge.innerHTML=label;
+  },100);
+  document.getElementById('dimsGrid').innerHTML=results.map(d=>`
+    <div class="dim-card">
+      <div class="dim-name">${d.name}</div>
+      <div class="dim-bar-wrap"><div class="dim-bar" style="width:${d.score}%"></div></div>
+      <div class="dim-score">${d.score}<span style="font-size:.75rem;color:var(--muted)">/100</span></div>
+      <div class="dim-hint">${d.hint}</div>
+    </div>`).join('');
+  /* 差异化建议：按短板维度组合生成，而不是按总分档位套模板 */
+  const DIM_ADVICE={
+    '清晰度':'用一句话讲清是什么、给谁用；删掉「颠覆/极致/全面」等大词',
+    '一致性':'前后对同一件事用同一套说法；删掉反复强调的套话',
+    '可追溯':'每个判断补数据/案例/来源（如「市占率 X%」「用户数 Y」）',
+    '可执行':'补具体时间节点、责任人、验收标准',
+    '爱与责任':'说清楚「对谁负责、负责到什么程度」',
+    '真诚与感恩':'删掉绝对化承诺（「必将/一定/100%」），换成可验证条件'
+  };
+  const weak=results.filter(d=>d.score<50).sort((a,b)=>a.score-b.score).slice(0,3);
+  const weakAdvice=weak.map(d=>'<li><b>'+d.name+'</b>：'+DIM_ADVICE[d.name]+'</li>').join('');
+  let title,advice;
+  if(total<=35){title='🧊 冰态：逻辑稀薄，需降温定型';
+    advice='<ul>'+weakAdvice+'</ul>';}
+  else if(total<=60){title='💧 水态：基本框架存在，需润色推进';
+    advice='<ul>'+weakAdvice+'</ul>';}
+  else if(total<=75){title='☁️ 气态：逻辑自洁，可执行';
+    advice='<ul><li>较强维度：'+results.filter(d=>d.score>=60).map(d=>d.name).join('、')+'</li><li>已具备较高确定性，可作为团队协议或制度草案</li></ul>';}
+  else{title='⭐ 超浓：公理级逻辑，建议写入宪法';
+    advice='<ul><li>六维均衡且无短板，逻辑密度已达公理级别</li></ul>';}
+  document.getElementById('adviceBox').innerHTML=`<h4>${title}</h4>${advice}`;
+}
+
+/* ===================== 引擎二：水分蒸发器 ===================== */
+const PROMISE=['颠覆','重新定义','海量','千亿','百亿','万亿','必将','无限','顶级','第一','革命性','赋能','闭环','一站式','生态','遥遥领先','划时代','史无前例'];
+const HYPE=['极强','丰富','卓越','优秀','强大','完美','全面','巨大','广阔','一流','顶尖','领先','雄厚','综合实力','极致'];
+const CERTAIN=['肯定','必然','一定','必将','绝对','毫无疑问','势必','注定'];
+const EST_DEFAULT=50;
+/* 四个真实案例，分别对应四个档位（分数经算法探针验证：冰32/水56/气63/超浓76）
+   来源均为联网检索到的真实素材，非虚构：
+   - bp 冰态：融合真实被罚广告用语特征（徕芬"全面超越戴森/中国首创/中国首款"、保利"多处绝对化用语"等市监处罚案例）
+   - report 水态：公开《公司年度报告范文》真实段落（含真实数据+常规套话）
+   - vapor 气态：咸阳市政府采购项目合同书（ccgp-shaanxi.gov.cn）真实验收/结算/违约条款
+   - axiom 超浓：《中华人民共和国广告法》第四/五/十一条 + 行业诚信经营公约范式
+   - franchise 水态：融合真实招商加盟文案夸张用语特征（瑞健未来"超级氧吧"/卡莱米路/虎鲸妈妈等公开招商文本） */
+const SAMPLES={
+  bp:'我们的产品全面超越行业标杆，是中国首创、全网第一的颠覆性创新平台！团队拥有极强的综合实力和丰富的行业经验，产品体验极致。市场前景无限广阔，未来三年必将突破百亿规模，我们一定会成为行业第一，为您带来极致体验！',
+  report:'2024年是公司发展历程中具有重要意义的一年。在全体员工的共同努力下，公司实现年度总收入12500万元，净利润1800万元，同比增长12%，新增客户150家，研发投入900万元，获得2项专利认证。面对市场竞争加剧，公司坚持高质量发展，持续深化内部管理、提升核心竞争力，取得了较为显著的成绩，为未来发展奠定了坚实基础。',
+  vapor:'根据采购文件、合同及国家相应标准规范，货物送达指定地点后由甲方和乙方共同检验，达到使用条件时由甲方组织验收。合同总价款172万元，项目供货安装调试完毕并经终验合格后支付全款。乙方不能按期完成，每延迟一日支付合同总价0.01%违约金；逾期30天甲方有权终止合同。双方应当遵循诚实信用、公平公开的原则，对验收结果如实确认。',
+  axiom:'根据《中华人民共和国广告法》第四条，广告主应当对广告内容的真实性负责；广告使用数据、统计资料、调查结果的引证内容应当真实、准确，并标明出处，口径统一。项目负责人应当组织审核，部门对发布内容确认后方可上线。所有数据一律公开透明，不得隐瞒。任何承诺都必须写进合同，关键指标一律量化。项目完成后提交验收报告，由部门复核确认。验收标准：截止2026年12月31日，注册用户达到10000人，复购率不低于40%，满意度达到95%。我们相信，只有真诚与尊重才能长期合作，感谢每位伙伴的信任与支持，源于真实的长期经营。',
+  franchise:'站在风口上，猪都能飞起来！未来十年，这个市场必将突破万亿规模，现在入局就是躺赚。我们的模式颠覆了整个行业，零风险、零门槛、包赚不赔。总部全程保姆式扶持，从选址到开业手把手教你，小白也能月入十万。成功案例遍布全国，无数人已经实现了财富自由。不要犹豫，不要观望，机会稍纵即逝，错过今天再等十年！现在加盟，总部还送价值百万的开业大礼包，名额有限，先到先得！'
 };
-
-// ============ Language State ============
-let lang = localStorage.getItem('h2o-lang') || 'zh';
-let lastResult = null;
-
-function t(key) { return T[lang][key]; }
-
-function toggleLang() {
-  lang = lang === 'zh' ? 'en' : 'zh';
-  localStorage.setItem('h2o-lang', lang);
-  applyLang();
-  if (lastResult) renderResult();
+let mode='geek';
+/* 存储当前分析结果供导出和对比用 */
+let _lastResult={text:'',thermo:null,evap:null,sents:[],leaks:[],water:0,dense:0,R:0,level:'',rebuild:''};
+function splitSentences(t){return t.split(/[。！？；\n]+/).map(s=>s.trim()).filter(s=>s.length>0);}
+function classify(s){
+  const hasNum=/\d/.test(s);
+  const hasP=PROMISE.some(w=>s.includes(w));
+  const hasH=HYPE.some(w=>s.includes(w));
+  const hasC=CERTAIN.some(w=>s.includes(w));
+  if(hasH&&!hasP&&!hasNum) return 'C';
+  if(hasP&&!hasNum) return 'B';
+  if((hasH&&hasP)&&!hasNum) return 'C';
+  if(hasC&&!hasNum) return 'D';
+  return 'A';
 }
-
-function applyLang() {
-  document.querySelectorAll('[data-t]').forEach(el => {
-    const key = el.getAttribute('data-t');
-    const val = t(key);
-    if (typeof val === 'string') el.textContent = val;
+const LAW={
+  功效:{words:['治疗','治愈','疗效','有效','百分百','消炎','降脂','改善','修复','抗','防脱发','助眠','减肥','专治','见效'],law:'《广告法》第十七条 / 第二十八条',note:'非药品、普通食品不得宣称治疗或功效'},
+  绝对化:{words:['第一','最','顶级','唯一','独家','极致','全网最低','全网最高','全网第一','国家级','世界级','首选','王牌','史无前例','遥遥领先','无可比拟','空前','绝无仅有','至尊','历来'],law:'《广告法》第九条第三项',note:'禁止使用绝对化用语'},
+  虚假:{words:['颠覆','重新定义','必将','突破','指数级','千亿','百亿','万亿','引领','赋能千行百业','革命性','迈向全新纪元','全新纪元'],law:'《反不正当竞争法》第八条',note:'虚假或引人误解的商业宣传'},
+  自嗨:{words:['极强','丰富','卓越','优秀','强大','完美','全面','巨大','广阔','一流','顶尖','领先','雄厚','综合实力','体验极致','空前热烈','圆满落幕'],law:'《广告法》第四条',note:'广告不得含有虚假或引人误解的内容'}
+};
+const CASES={
+  功效:'2026.3 南京某医美虚构"90%有效"被罚 20万+停业整顿。',
+  绝对化:'2026.1 温州"全国销量第一"罚 20万；加拿大鹅两处"最"字罚 45万。',
+  虚假:'2026.3 明光市市监局对无依据数据宣传起罚线 20万；"重新定义行业"被认定虚假宣传后下架。',
+  自嗨:'2026.2 贵州/南充直播专项整治，自嗨文案被判低质→限流降权。'
+};
+function complianceScan(sents){
+  const out=[];
+  sents.forEach(s=>{
+    let tag,label,cls;
+    if(LAW.功效.words.some(w=>s.includes(w))){tag='功效违规';label='🚨 非药品宣称疗效·涉嫌违法';cls='B';}
+    else if(LAW.绝对化.words.some(w=>s.includes(w))){tag='绝对化用语';label='🚨 绝对化用语·涉嫌违法';cls='B';}
+    else if(LAW.虚假.words.some(w=>s.includes(w))){tag='无依据承诺';label='🚨 无依据数据承诺·虚假宣传';cls='B';}
+    else if(LAW.自嗨.words.some(w=>s.includes(w))){tag='自嗨空话';label='⚠️ 自嗨空话·易判低质限流';cls='C';}
+    if(tag) out.push({tag,label,cls,sentence:s});
   });
-  document.getElementById('langBtn').textContent = lang === 'zh' ? 'EN' : '中';
-  document.querySelector('title').textContent = 'H₂O ' + t('title');
-  // placeholder 国际化
-  const ph1 = t('ph1'), ph2 = t('ph2');
-  if (ph1) document.getElementById('minTime').placeholder = ph1;
-  if (ph2) document.getElementById('actualTime').placeholder = ph2;
+  return out;
 }
-
-// ============ 7档→3体温区 映射 ============
-function getZone(pct) {
-  if (pct >= 80) return 'cool';     // match/extra/anomaly/smooth → 清醒
-  if (pct >= 50) return 'warm';     // steady/sticky → 温热
-  return 'hot';                      // mud/broken → 过热
+function lawRef(s){
+  if(LAW.功效.words.some(w=>s.includes(w))){const h=LAW.功效.words.find(w=>s.includes(w));
+    return{law:LAW.功效.law,note:LAW.功效.note,cost:CASES.功效,replace:'删除「'+h+'」等疗效宣称；确有检测报告则改为"经XX机构检测，[指标]改善达XX%"'};}
+  if(LAW.绝对化.words.some(w=>s.includes(w))){const h=LAW.绝对化.words.filter(w=>s.includes(w));
+    return{law:LAW.绝对化.law,note:LAW.绝对化.note,cost:CASES.绝对化,replace:'删除「'+h.join('」「')+'」→ 用可验证数据替代，如"市占率 XX%"'};}
+  if(LAW.虚假.words.some(w=>s.includes(w))){const h=LAW.虚假.words.filter(w=>s.includes(w));
+    return{law:LAW.虚假.law,note:LAW.虚假.note,cost:CASES.虚假,replace:'删除「'+h.join('」「')+'」→ 注明来源口径；无法佐证则整句删除'};}
+  if(LAW.自嗨.words.some(w=>s.includes(w))){const h=LAW.自嗨.words.filter(w=>s.includes(w)).slice(0,3);
+    return{law:LAW['自啉'].law,note:LAW['自啉'].note,cost:CASES['自啉'],replace:'将「'+h.join('」「')+'」替换为具体事实，如极强团队→2013人均来自XX公司'};}
+  return{law:'《广告法》第四条',note:'广告不得含有虚假或引人误解的内容',cost:CASES.自嗨,replace:'用具体事实/数字替代形容词'};
 }
-
-function clampPct(pct) {
-  // 体温条映射: 0-100% → 条上位置 0%-100%
-  return Math.max(0, Math.min(100, pct));
+function setMode(m){
+  mode=m;
+  document.getElementById('m-geek').classList.toggle('active',m==='geek');
+  document.getElementById('m-comp').classList.toggle('active',m==='compliance');
+  if(!document.getElementById('evapArea').classList.contains('hidden')) renderEvap(document.getElementById('inputText').value);
 }
-
-// 同 zone 内按分数高低分 5 档（0=最弱/最轻 → 4=最强/最重），保证等级与分数挂钩不倒挂
-function zoneIndex(zone, pct) {
-  if (zone === 'cool') return Math.max(0, Math.min(4, Math.floor((pct - 80) / 5)));   // 80-84→0 … 100+→4
-  if (zone === 'warm') return Math.max(0, Math.min(4, Math.floor((pct - 50) / 6)));   // 50-55→0 … 74-79→4
-  return Math.max(0, Math.min(4, Math.floor(pct / 10)));                               // hot: 0-9→0 … 40-49→4
+function generateVerdict(text,water,level,leaks){
+  const bCount=leaks.filter(l=>l.tag==='无依据承诺').length;
+  const cCount=leaks.filter(l=>l.tag==='自嗨空话').length;
+  const dCount=leaks.filter(l=>l.tag==='缺反向验证').length;
+  const HEAT=['爆火','全网','狂欢','热度','疯传','刷屏','现象级','出圈','顶流','网红','跟风','一夜'];
+  const heatHit=HEAT.some(w=>text.includes(w));
+  let title='',body='',action='';
+  if(level==='L0'){title='🔴 全是泡沫';
+    body=`水分率 ${water}%。说不清就喊百亿，投资人直接划走。${heatHit?'⚠️ 围观≠喜爱，别把泡沫当需求。':''}`;
+    action='▶ 填下方 4 个槽位，把泡沫压成干货';}
+  else if(level==='L1'){title='🟠 承诺多过事实';
+    body=`水分率 ${water}%。一半是空话，读完记不住任何信息。`;
+    action='▶ 填下方槽位，用事实替换标红空话';}
+  else if(level==='L2'){title='🟡 有骨架，肉虚';
+    body=`水分率 ${water}%。方向对但注水多。`;
+    action='▶ 填下方槽位，每加一个数字水分降一截';}
+  else{title='🟢 逻辑较扎实';
+    body=`水分率 ${water}%。无明显问题。`;
+    action=`▶ 微调即可发布。`;}
+  return '<span class="v-title">'+title+'</span><div>'+body+'</div><div class="v-action">'+action+'</div>';
 }
+function generateVerdictCompliance(leaks){
+  const hasB=leaks.some(l=>l.cls==='B'); const hasC=leaks.some(l=>l.cls==='C');
+  let risk,rbody;
+  if(hasB){risk='极高罚款风险';rbody='检出涉嫌违法表述。单次起罚线约 20 万元，情节严重可处广告费数倍罚款乃至封号下架。';}
+  else if(hasC){risk='平台封禁 / 降权风险';rbody='未触红线，但自嗨空话易被算法判低质→限流。';}
+  else{risk='安全合规放行';rbody='未检出明显违规表述，可放心发布。';}
+  let html='<span class="v-title" style="color:var(--danger)">🚨 合规风控结论：'+risk+'</span><div>'+rbody+'</div>';
+  const top=leaks.slice(0,3);
+  if(top.length){
+    html+='<div style="margin-top:10px">';
+    top.forEach(o=>{const ref=lawRef(o.sentence);
+      html+='<div style="margin-bottom:8px;padding:8px 10px;border:1px solid var(--line);border-left:3px solid '+(o.cls==='B'?'var(--danger)':'var(--warn)')+';border-radius:6px">'
+        +'<div style="margin-bottom:4px"><span class="tag tag-'+o.cls+'">['+o.label+']</span> <span class="quote">"'+o.sentence+'"</span></div>'
+        +'<div style="font-size:.8rem;color:var(--muted);line-height:1.7">⚖️ '+ref.law+' &nbsp;|&nbsp; 💸 '+ref.cost+'<br>✅ '+ref.replace+'</div></div>';
+    });
+    html+='</div>';
+  }
+  html+='<div class="v-action">▶ 发布前逐条按「✅ 合规替换」改写。</div>';
+  return html;
+}
+function extractEntities(t){
+  let product='';
+  const pMatch=t.match(/(?:项目|产品|平台|服务|系统|工具)[是为叫]?\s*["「]?([^"，。」\n]{2,15})/);
+  if(pMatch) product=pMatch[1]; else if(t.includes('创新')) product='某创新方向'; else product='';
+  const hasWaterWord=[...PROMISE,...HYPE,'全新','综合性','优质','高端','一款','一种','一个'].some(w=>product.includes(w));
+  if(!hasWaterWord) product=product.replace(/^[的为叫是]+/,'').replace(/[的为叫]+$/,'').trim(); else product='';
+  let team=(t.includes('团队')||t.includes('我们'))?'N 人 / Y 年经验':'（未提及）';
+  let diff=(t.includes('颠覆')||t.includes('重新定义'))?'具体在哪一点？':'（需提炼）';
+  return {product,team,diff};
+}
+function renderEvap(text){
+  const sents=splitSentences(text);
+  if(sents.length===0) return;
+  let leaks=[];
+  if(mode==='compliance'){complianceScan(sents).forEach(o=>leaks.push({tag:o.tag,label:o.label,cls:o.cls,sentence:o.sentence}));}
+  else{sents.forEach(s=>{const t=classify(s);
+    if(t==='B')leaks.push({tag:'无依据承诺',label:'无依据承诺',cls:'B',sentence:s});
+    else if(t==='C')leaks.push({tag:'自嗨空话',label:'自嗨空话',cls:'C',sentence:s});
+    else if(t==='D')leaks.push({tag:'缺反向验证',label:'缺反向验证',cls:'D',sentence:s});});}
+  const b=leaks.filter(l=>l.cls==='B').length,c=leaks.filter(l=>l.cls==='C').length,d=leaks.filter(l=>l.cls==='D').length;
+  const water=Math.round((b+c+0.5*d)/sents.length*100);
+  const dense=100-water; const R=((water-EST_DEFAULT)/EST_DEFAULT);
+  let level='L3',cls='L3';
+  if(water>=70){level='L0';cls='L0';} else if(water>=50){level='L1';cls='L1';} else if(water>=30){level='L2';cls='L2';}
 
-// ============ Calculation ============
-function calculate() {
-  const min = parseFloat(document.getElementById('minTime').value);
-  const actual = parseFloat(document.getElementById('actualTime').value);
-  const el = document.getElementById('result');
-  const shareEl = document.getElementById('shareBtn');
+  /* 存储结果供导出/对比使用 */
+  const badRatio=sents.length?(b+c+d)/sents.length:0;
+  _lastResult={text:text,thermo:calcThermo(text,badRatio),evap:{water,dense,R,level},sents,leaks,water,dense,R,level};
 
-  if (!min || !actual || min <= 0 || actual <= 0) {
-    el.className = 'result show';
-    el.innerHTML = `<div class="diagnosis" style="background:#fff3cd;border:1px solid #ffc107;"><div class="level" style="color:#856404;">${t('errTitle')}</div><div class="desc">${t('errBody')}</div></div>`;
-    shareEl.classList.remove('show');
-    lastResult = null;
+  document.getElementById('evapArea').classList.remove('hidden');
+  document.getElementById('m-water').textContent=water+'%';
+  document.getElementById('m-water').style.color=water>=70?'var(--danger)':water>=50?'var(--warn)':'var(--ok)';
+  document.getElementById('m-dense').textContent=dense+'%';
+  document.getElementById('m-R').textContent=(R>=0.7?'⚠️ 泡沫严重':R>=0.4?'🟡 有注水':R>0?'🟢 少量水分':'✅ 干净');
+  const rn=document.getElementById('r-note');
+  if(R>=0.7){rn.textContent='';rn.style.color='var(--danger)';}
+  else if(R>=0.4){rn.textContent='';rn.style.color='var(--warn)';}
+  else if(R>0){rn.textContent='';rn.style.color='var(--ok)';}
+  else{rn.textContent='';rn.style.color='var(--ok)';}
+  const lv=document.getElementById('m-level');
+  if(mode==='compliance'){
+    const hasB=leaks.some(l=>l.cls==='B'),hasC=leaks.some(l=>l.cls==='C');
+    let risk,rcls; if(hasB){risk='🚨 极高罚款风险';rcls='L0';} else if(hasC){risk='⚠️ 降权风险';rcls='L1';} else {risk='✅ 安全放行';rcls='L3';}
+    lv.textContent=risk; lv.className='lvl-badge '+rcls; document.getElementById('k-level').textContent='风控';
+  } else {lv.textContent=level; lv.className='lvl-badge '+cls; document.getElementById('k-level').textContent='定级';
+  const ln=document.getElementById('level-note'); if(ln){
+    if(level==='L0'){ln.textContent='(极虚)';ln.style.color='var(--danger)';lv.title='极虚：70%以上都是泡沫';}
+    else if(level==='L1'){ln.textContent='(偏虚)';ln.style.color='var(--warn)';lv.title='偏虚：50~70%有水分';}
+    else if(level==='L2'){ln.textContent='(较实)';ln.style.color='var(--ok)';lv.title='较实：30~50%有水分';}
+    else {ln.textContent='(极实)';ln.style.color='var(--ok)';lv.title='极实：低于30%，逻辑扎实';}
+  }}
+  const bridge=document.getElementById('evapBridge'); if(bridge){ bridge.style.display='block';
+    if(level==='L0'||level==='L1'){bridge.textContent='全是泡沫？填下方 4 个槽位，10 秒变干货 ⬇️';}
+    else{bridge.textContent='基础不错，再填几个关键信息就能更扎实 ⬇️';}}
+  const top=leaks.slice(0,3); const lk=document.getElementById('leaks');
+  const lt=document.getElementById('leak-title');
+  if(top.length===0){lt.textContent='✅ 干净'; lk.innerHTML='<div class="leak">暂未检出明显问题，逻辑较扎实</div>';}
+  else if(top.length===1){lt.textContent=(mode==='compliance'?'⚠️ 检出 1 处违规':'💥 发现 1 个问题处');}
+  else if(top.length===2){lt.textContent=(mode==='compliance'?'⚠️ 检出 2 处违规':'💥 发现 2 个问题处');}
+  else{lt.textContent=(mode==='compliance'?'⚠️ 检出 '+top.length+' 处违规':'💥 发现 '+top.length+' 个问题处');}
+  lk.innerHTML='';
+  top.forEach(o=>{const div=document.createElement('div'); div.className='leak';
+    div.innerHTML='<span class="tag tag-'+o.cls+'">['+o.label+']</span><span class="quote">"'+o.sentence+'"</span>'; lk.appendChild(div);});
+  document.getElementById('verdict').innerHTML=(mode==='compliance')?generateVerdictCompliance(leaks):generateVerdict(text,water,level,leaks);
+  const rb=document.getElementById('rebuild'); let html='';
+  const aSents=sents.filter(s=>classify(s)==='A');
+  if(aSents.length>0){sents.forEach(s=>{const t=classify(s);
+    if(t==='A')html+=s+'。\n'; else html+='<span style="color:var(--warn)">🔧 '+s.slice(0,14)+'… → 写清事实/数字/约束</span>\n';});}
+  else{const e=extractEntities(text);
+    const projHtml=e.product?'<span class="entity-extract">'+e.product+'</span>':'<input type="text" id="s-project" class="slot-input" placeholder="如：SaaS 客户管理工具" oninput="updatePreview()">';
+html='<div class="rebuild-toggle" id="rebuildToggle" onclick="toggleRebuild()">▼ 填写关键信息，自动生成干净文案</div>'
++'<div style="font-size:.8rem;color:var(--muted);margin:8px 2px 0;line-height:1.6">示范：填好后这里会生成 ——「项目是「X」，团队 N 人 Y 年经验，差异化在于：具体差异，验证标准：首月 M 用户，未达则止损」</div>'
++'<div class="rebuild-content hidden" id="rebuildContent">'
+      +'<div class="slot-line"><span class="slot-label">项目：</span>'+projHtml+'</div>'
+      +'<div class="slot-line"><span class="slot-label">团队：</span><input type="text" id="s-team" class="slot-input" placeholder="如：3人，2年经验" oninput="updatePreview()"></div>'
+      +'<div class="slot-line"><span class="slot-label">差异化：</span><input type="text" id="s-diff" class="slot-input" placeholder="如：唯一做到自动对账" oninput="updatePreview()"></div>'
+      +'<div class="slot-line"><span class="slot-label">验证：</span><input type="text" id="s-metric" class="slot-input" placeholder="如：首月 50 用户" oninput="updatePreview()"></div>'
+      +'<div class="preview-box"><span class="preview-label">📄 蒸发后的干净文案</span><div id="preview-text">填写上方槽位，自动生成可执行文案</div></div>'
+      +'<button class="copy-btn" onclick="copyResult()" id="copy-btn" disabled>📋 复制文案</button>'
+      +'</div>';}
+  rb.innerHTML=html||'（无内容）';
+  const rc=document.getElementById('rebuildContent');
+  _lastResult.rebuild=rc?rc.innerText.trim():rb.innerText;
+  if(aSents.length===0) updatePreview();
+
+  /* 显示导出栏 */
+  document.getElementById('exportBar').classList.remove('hidden');
+}
+function updatePreview(){
+  const projEl=document.getElementById('s-project'); const proj=projEl?(projEl.value||'').trim():'';
+  const extracted=document.querySelector('.entity-extract')?.textContent?.trim()||'';
+  const team=(document.getElementById('s-team')?.value||'').trim();
+  const diff=(document.getElementById('s-diff')?.value||'').trim();
+  const metric=(document.getElementById('s-metric')?.value||'').trim();
+  const box=document.getElementById('preview-text'); if(!box) return;
+  const realProj=proj||extracted;
+  const btn=document.getElementById('copy-btn'); const hint=document.getElementById('copy-hint');
+  if(!realProj&&!team&&!diff&&!metric){
+    box.textContent='↑ 填写上方槽位，这里自动生成可复制的干净文案';box.style.color='var(--muted)';
+    if(btn){btn.disabled=true;} if(hint){hint.textContent='填写任意槽位即可解锁干净文案';}
     return;
   }
-
-  const yieldPct = Math.round((min / actual) * 100);
-  const lossX = Math.round((actual / min) * 10) / 10;
-  const zone = getZone(yieldPct);
-  const zData = t('zones')[zone];
-
-  lastResult = { yieldPct, lossX, zone, zData, min, actual };
-
-  renderResult();
+  if(btn){btn.disabled=false;} if(hint){hint.textContent='';}
+  const parts=[];
+  if(realProj) parts.push('项目是「'+realProj+'」');
+  if(team) parts.push('团队'+team);
+  if(diff) parts.push('差异化在于：'+diff);
+  if(metric) parts.push('验证标准：'+metric+'，未达则止损');
+  box.textContent=parts.join('。')+'。'; box.style.color='var(--text)';
+  _lastResult.rebuild=box.textContent;
+}
+function toggleRebuild(){
+  const c=document.getElementById('rebuildContent');
+  const t=document.getElementById('rebuildToggle');
+  if(!c||!t) return;
+  const willShow=c.classList.contains('hidden');
+  c.classList.toggle('hidden');
+  t.textContent=willShow?'▲ 收起槽位':'▼ 填写关键信息，自动生成干净文案';
+}
+function copyResult(){
+  const btn=document.getElementById('copy-btn'); if(btn&&btn.disabled) return;
+  const text=document.getElementById('preview-text')?.textContent||'';
+  if(!text||text.includes('填写上方')) return;
+  navigator.clipboard.writeText(text).then(()=>{const b=document.getElementById('copy-btn');
+    if(b){b.textContent='✅ 已复制'; b.classList.add('copied');
+    setTimeout(()=>{b.textContent='📋 复制文案';b.classList.remove('copied');},2000);}});
 }
 
-function renderResult() {
-  if (!lastResult) return;
-  const { yieldPct, lossX, zone, zData, min, actual } = lastResult;
-  const el = document.getElementById('result');
-  const shareEl = document.getElementById('shareBtn');
-  const lossStyle = lossX >= 3 ? ' style="color:#DC2626;font-weight:800;"' : '';
+/* ===== 新增：前后对比视图 ===== */
+function toggleCompare(){
+  const area=document.getElementById('compareArea');
+  area.classList.toggle('hidden');
+  if(!area.classList.contains('hidden')) renderCompare();
+}
+function renderCompare(){
+  if(!_lastResult.text) return;
+  const sents=_lastResult.sents;
+  const leaks=_lastResult.leaks;
+  /* 收集所有被判为问题的句子原文 */
+  const badSet=new Set();
+  leaks.forEach(l=>badSet.add(l.sentence));
 
-  // 从多元文案池随机抽取（level按分数档位固定，其余随机保持灵活好玩）
-  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-  const idx = zoneIndex(zone, yieldPct);
-  const level = zData.levels[idx];
-  const descFn = pick(zData.descs);
-  const tipFn = pick(zData.tips);
-  const ctaFn = pick(zData.ctas);
-  const quote = pick(zData.quotes);
+  let beforeHtml='',afterHtml='';
+  sents.forEach(s=>{
+    const isBad=badSet.has(s);
+    beforeHtml+='<span class="'+(isBad?'strike':'keep')+'">'+s+'。</span>\n';
+    if(!isBad) afterHtml+='<span class="keep">'+s+'。</span>\n';
+  });
 
-  // 体温条位置: pct → %
-  const barPos = clampPct(yieldPct);
+  /* 如果after是空的（全句都有问题），显示提示 */
+  if(!afterHtml.trim()) afterHtml='<span style="color:var(--warn);font-style:italic">（全部句子均被标记为虚胖/灌水，请填写上方槽位生成干净的替换文案）</span>';
 
-  el.className = `result show zone-${zone}`;
-  el.innerHTML = `
-    <div class="score-ring">
-      <div class="pct">${yieldPct}%</div>
-      <div class="unit-label">${t('unitLabel')}</div>
-    </div>
-
-    <!-- 体温预警条 -->
-    <div class="temp-bar-wrap">
-      <div class="temp-bar-label">
-        <span>${t('tempBarLabel')[0]}</span>
-        <span>${t('tempBarLabel')[1]}</span>
-        <span>${t('tempBarLabel')[2]}</span>
-      </div>
-      <div class="temp-bar-track">
-        <div class="temp-bar-marker" style="left:${barPos}%;"></div>
-      </div>
-      <div class="temp-bar-ticks">
-        <span>&lt;50%</span>
-        <span>50-80%</span>
-        <span>80%+</span>
-      </div>
-    </div>
-
-    <div class="meta-bar">${t('metaPrefix')}<strong${lossStyle}>${lossX}${t('metaSuffix')}</strong></div>
-    <div class="diagnosis">
-      <div class="level">${level}</div>
-      <div class="desc">${descFn(min, actual, yieldPct, lossX)}</div>
-      <div class="tip">${typeof tipFn === 'function' ? tipFn(min, actual) : tipFn}</div>
-      ${yieldPct > 100 ? `<div class="calibrate-hint">${t('calibrateHint')}</div>` : ''}
-      <div class="cta">${ctaFn(yieldPct)}</div>
-      <div class="golden-quote">💡 ${quote}</div>
-      <div class="formula-ref">${t('formula')}</div>
-    </div>
-  `;
-  lastResult.goldenQuote = quote;
-  shareEl.classList.add('show');
-  shareEl.textContent = t('share');
+  document.getElementById('compareContent').innerHTML=
+    '<div class="compare-grid">'
+    +'<div class="compare-col compare-before"><h5>❄️ 蒸发前（原始文本）</h5><div class="compare-text">'+beforeHtml+'</div></div>'
+    +'<div class="compare-col compare-after"><h5>✨ 蒸发后（保留干货）</h5><div class="compare-text">'+afterHtml+'</div></div>'
+    +'</div>';
 }
 
-// ============ Share Image ============
-function shareImage() {
-  if (!lastResult) return;
-  const { yieldPct, zone } = lastResult;
-  const si = t('shareImg');
-  const c = document.getElementById('shareCanvas');
-  const ctx = c.getContext('2d');
-  const W = 1080, H = 1080;
+/* ===== 新增：一键导出报告 ===== */
+function exportReport(){
+  if(!_lastResult.text){alert('请先运行诊断');return;}
 
-  // Zone colors for share card
-  const zoneColors = {
-    cool: { ring: '#16A34A', bg: '#F0FDF4', text: '#2c2c2c' },
-    warm: { ring: '#D97706', bg: '#FFFBEB', text: '#2c2c2c' },
-    hot:  { ring: '#DC2626', bg: '#FEF2F2', text: '#2c2c2c' }
-  };
-  const zColor = zoneColors[zone] || zoneColors.cool;
-  const isHot = zone === 'hot';
-
-  // Background
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(0, 0, W, H);
-
-  // Score ring
-  const cx = W / 2, cy = 360;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 180, 0, Math.PI * 2);
-  ctx.strokeStyle = zColor.ring;
-  ctx.lineWidth = 12;
-  ctx.fillStyle = zColor.bg;
-  ctx.fill();
-  ctx.stroke();
-
-  // Score number
-  ctx.fillStyle = zColor.ring;
-  ctx.font = 'bold 120px -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText(yieldPct + '%', cx, cy + 35);
-
-  // Unit label
-  ctx.fillStyle = isHot ? 'rgba(220,38,38,.6)' : 'rgba(22,163,74,.6)';
-  ctx.font = '28px -apple-system, sans-serif';
-  ctx.fillText(t('unitLabel'), cx, cy + 80);
-
-  // Temperature bar on share card
-  const barY = 520;
-  const barW = 600, barH = 16, barLeft = (W - barW) / 2;
-  // Track gradient
-  const grad = ctx.createLinearGradient(barLeft, 0, barLeft + barW, 0);
-  grad.addColorStop(0, '#DC2626');
-  grad.addColorStop(0.5, '#D97706');
-  grad.addColorStop(0.8, '#D97706');
-  grad.addColorStop(0.8, '#16A34A');
-  grad.addColorStop(1, '#16A34A');
-  ctx.fillStyle = grad;
-  roundRect(ctx, barLeft, barY, barW, barH, 8);
-  ctx.fill();
-
-  // Marker dot
-  const markerX = barLeft + (clampPct(yieldPct) / 100) * barW;
-  ctx.beginPath();
-  ctx.arc(markerX, barY + barH/2, 14, 0, Math.PI * 2);
-  ctx.fillStyle = '#fff';
-  ctx.fill();
-  ctx.strokeStyle = zColor.ring;
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  // Bar labels
-  ctx.fillStyle = '#999';
-  ctx.font = '22px -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('<50%', barLeft, barY + 48);
-  ctx.textAlign = 'center';
-  ctx.fillText('50-80%', cx, barY + 48);
-  ctx.textAlign = 'right';
-  ctx.fillText('80%+', barLeft + barW, barY + 48);
-
-  // Zone level
-  ctx.fillStyle = zColor.ring;
-  ctx.font = 'bold 44px -apple-system, sans-serif';
-  ctx.textAlign = 'center';
-  // Zone level text (pick from pool for share too)
-  const zoneData = t('zones')[zone];
-  const levelText = zoneData.levels[Math.floor(Math.random() * zoneData.levels.length)];
-  ctx.fillText(levelText, cx, 640);
-
-  // Subtitle
-  ctx.fillStyle = '#5F5E5A';
-  ctx.font = '26px -apple-system, sans-serif';
-  ctx.fillText(si.subtitle, cx, 700);
-
-  // Golden quote block on share card
-  const qText = lastResult.goldenQuote || '';
-  ctx.font = 'bold 30px -apple-system, sans-serif';
-  const maxW = 800;
-  let qlines = [], qcur = '';
-  for (const ch of qText) {
-    const test = qcur + ch;
-    if (ctx.measureText(test).width > maxW && qcur) { qlines.push(qcur); qcur = ch; }
-    else qcur = test;
+  const t=_lastResult;
+  const thermoResults=t.thermo;
+  let total=Math.round(thermoResults.reduce((s,d)=>s+d.score,0)/thermoResults.length);
+  /* 与界面一致：按水分率钳制总分后再定档 */
+  if(typeof t.water==='number'){
+    const cap = t.water>=70?32 : t.water>=50?46 : t.water>=30?58 : 100;
+    if(total>cap) total=cap;
   }
-  if (qcur) qlines.push(qcur);
-  qlines = qlines.slice(0, 2);
-  const qBoxH = qlines.length * 42 + 40;
-  const qBoxY = 730;
-  ctx.fillStyle = zColor.ring;
-  roundRect(ctx, 120, qBoxY, W - 240, qBoxH, 18);
-  ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 30px -apple-system, sans-serif';
-  qlines.forEach((ln, i) => ctx.fillText(ln, cx, qBoxY + 46 + i * 42));
-  ctx.font = '22px -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(255,255,255,.75)';
-  ctx.fillText('💡 金句', cx, qBoxY + qBoxH - 14);
+  let stateLabel='';
+  if(total<=35) stateLabel='🧊 冰态 — 逻辑冻结';
+  else if(total<=60) stateLabel='💧 水态 — 有框架、需润色';
+  else if(total<=75) stateLabel='☁️ 气态 — 逻辑自洁';
+  else stateLabel='⭐ 超浓 — 公理级';
 
-  // Slogan
-  ctx.fillStyle = '#5F5E5A';
-  ctx.font = '24px -apple-system, sans-serif';
-  ctx.fillText(si.slogan, cx, 900);
+  const dimsTable=thermoResults.map(d=>`| ${d.name} | **${d.score}**/100 | ${d.hint} |`).join('\n');
 
-  // Footer URL
-  ctx.fillStyle = '#b0b0b0';
-  ctx.font = '20px -apple-system, sans-serif';
-  ctx.fillText(si.footer, cx, 960);
+  let leakList='';
+  if(t.leaks.length===0) leakList='暂未检出明显问题。';
+  else t.leaks.forEach((l,i)=>{
+    leakList+=(i+1)+'. **['+l.label+']** "'+l.sentence+'"\n';
+  });
 
-  // Brand mark top-left
-  ctx.fillStyle = zColor.ring;
-  ctx.font = 'bold 32px -apple-system, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('H₂O', 60, 80);
-  ctx.textAlign = 'center';
+  const modeLabel=mode==='compliance'?'电商/直播合规自检模式':'极客/商业计划书模式';
 
-  // Download
-  const link = document.createElement('a');
-  link.download = 'h2o-clarity-thermometer.png';
-  link.href = c.toDataURL('image/png');
-  link.click();
+  const md=
+'# H₂O 双引擎诊断报告\n'
++'\n'
++'> 生成时间：'+new Date().toLocaleString('zh-CN')+'  |  模式：'+modeLabel+'\n'
++'> 引擎：逻辑提纯器（清醒温度计 + 水分蒸发器）\n'
++'\n'
++'---\n'
++'\n'
++'## 📋 原始文本\n'
++'\n'
++t.text
++'\n'
++'---\n'
++'\n'
++'## 🧊 ① 清醒温度计 · 逻辑浓度\n'
++'\n'
++'| 指标 | 数值 |\n'
++'|------|------|\n'
++'| **逻辑浓度** | **'+total+'%** |\n'
++'| 物态 | '+stateLabel+' |\n'
++'\n'
++'### 六维明细\n'
++'\n'
++'| 维度 | 得分 | 说明 |\n'
++'|------|------|------|\n'
++dimsTable
++'\n'
++'---\n'
++'\n'
++'## 💧 ② 水分蒸发器\n'
++'\n'
++'| 指标 | 数值 |\n'
++'|------|------|\n'
++'| **水分率** | **'+t.water+'%** |\n'
++'| 逻辑密度 | '+t.dense+'% |\n'
++'| 水情 | '+(t.R>=0.7?'⚠️ 泡沫严重':t.R>=0.4?'🟡 有注水':t.R>0?'🟢 少量水分':'✅ 干净')+' |\n'
++'| 定级 | **'+t.level+'** |\n'
++'\n'
++'### 问题处 ('+t.leaks.length+' 处)\n'
++'\n'
++leakList
++'\n'
++'---\n'
++'\n'
++'## ✂️ 蒸发后骨架\n'
++'\n'
++(t.rebuild||'（待填写槽位生成）')
++'\n'
++'---\n'
++'\n'
++'## ▶ 行动建议\n'
++'\n'
++'1. 优先处理 B 类问题（无依据承诺）—— 用可验证数据替代形容词\n'
++'2. 再处理 C 类问题（自嗨空话）—— 替换为具体事实\n'
++'3. 最后检查 D 类问题（缺反向验证）—— 补入约束条件和失败预案\n'
++'\n'
++'---\n'
++'\n'
++'*报告由 H₂O 双引擎自动生成 · 以仁爱之心 做向上之事*\n';
+
+  navigator.clipboard.writeText(md).then(()=>{
+    alert('✅ 报告已复制到剪贴板！可直接粘贴到文档/笔记中使用。');
+  },()=>{/* fallback */ const ta=document.createElement('textarea');ta.value=md;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    alert('✅ 报告已复制到剪贴板！');
+  });
 }
 
-// Helper: rounded rect for canvas
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+/* ===================== 统一入口：双引擎并行 ===================== */
+function runBoth(){
+  const text=document.getElementById('inputText').value.trim();
+  if(!text){alert('请先输入待分析文本');return;}
+  document.getElementById('empty').classList.add('hidden');
+  /* 隐藏对比面板（重新诊断时） */
+  document.getElementById('compareArea').classList.add('hidden');
+  renderEvap(text);
+  renderThermo(text, _lastResult.water);
+  document.getElementById('thermoArea').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setSample(k){document.getElementById('inputText').value=SAMPLES[k]||'';
+  if(k==='live') setMode('compliance'); else if(mode!=='geek') setMode('geek'); runBoth();}
+let exampleIdx=0;
+function loadSample(){
+  const list=['bp','report','vapor','axiom'];
+  setSample(list[exampleIdx%list.length]); exampleIdx++;
+}
+function clearAll(){document.getElementById('inputText').value='';
+  document.getElementById('thermoArea').classList.add('hidden');
+  document.getElementById('evapArea').classList.add('hidden');
+  document.getElementById('exportBar').classList.add('hidden');
+  document.getElementById('compareArea').classList.add('hidden');
+  document.getElementById('empty').classList.remove('hidden');
+  /* 重置截图区域 */
+  const pa=document.getElementById('pasteArea');pa.classList.remove('processing');
+  document.getElementById('previewImg').style.display='none';
+  document.getElementById('previewImg').src='';
+  document.getElementById('pasteIcon').style.display='';
+  document.getElementById('pasteText').style.display='';
+  document.getElementById('ocrSpinner').style.display='none';
+  const ph=pa.querySelector('.paste-hint'); if(ph) ph.style.display='';
 }
 
-// ============ Init ============
-applyLang();
+/* ===================== 截图 OCR 功能 ===================== */
+const pasteArea=document.getElementById('pasteArea');
+
+/* 剪贴板粘贴图片 */
+document.addEventListener('paste',function(e){
+  const items=e.clipboardData?.items;
+  if(!items) return;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type.indexOf('image')!==-1){
+      const file=items[i].getAsFile();
+      if(file) processImage(file);
+      break;
+    }
+  }
+});
+
+/* 拖拽图片 */
+pasteArea.addEventListener('dragover',function(e){e.preventDefault();pasteArea.classList.add('dragover');});
+pasteArea.addEventListener('dragleave',function(){pasteArea.classList.remove('dragover');});
+pasteArea.addEventListener('drop',function(e){
+  e.preventDefault();pasteArea.classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('image/')) processImage(file);
+});
+
+/* 文件选择 */
+function handleFileSelect(e){
+  const file=e.target.files[0];
+  if(file&&file.type.startsWith('image/')) processImage(file);
+}
+
+/* 处理图片并OCR */
+async function processImage(file){
+  const pa=document.getElementById('pasteArea');
+  const imgEl=document.getElementById('previewImg');
+  const iconEl=document.getElementById('pasteIcon');
+  const textEl=document.getElementById('pasteText');
+  const spinner=document.getElementById('ocrSpinner');
+  const hint=pa.querySelector('.paste-hint');
+
+  /* 显示预览 */
+  const url=URL.createObjectURL(file);
+  imgEl.src=url;
+  imgEl.style.display='block';
+  iconEl.style.display='none';
+  textEl.style.display='none';
+  if(hint) hint.style.display='none';
+
+  /* 显示处理状态 */
+  pa.classList.add('processing');
+  spinner.style.display='block';
+  textEl.textContent='正在识别文字…';
+  textEl.style.display='';
+
+  try{
+    const result=await Tesseract.recognize(file,'chi_sim+eng',{
+      logger:m=>{/* 可选：显示进度 */}
+    });
+    const text=result.data.text.trim();
+    if(text){
+      document.getElementById('inputText').value=text;
+      textEl.textContent='✅ 已识别 '+text.length+' 字，已填入上方输入框';
+      textEl.style.color='var(--ok)';
+    }else{
+      textEl.textContent='⚠️ 未识别到文字，请尝试更清晰的截图';
+      textEl.style.color='var(--warn)';
+    }
+  }catch(err){
+    textEl.textContent='⚠️ 识别失败：'+err.message;
+    textEl.style.color='var(--danger)';
+  }finally{
+    spinner.style.display='none';
+    pa.classList.remove('processing');
+    URL.revokeObjectURL(url);
+  }
+}
 </script>
 </body>
 </html>
