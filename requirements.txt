@@ -1,3 +1,0 @@
-# H2O 清醒度体温计 API · 零第三方依赖
-# 仅使用 Python 标准库（json / http.server / os / sys）
-# 保留此文件仅为满足 PaaS 构建规范（pip install -r requirements.txt 为空操作）
